@@ -1,0 +1,38 @@
+<RCC>
+    <qresource prefix="/">
+        <file>audio/DefaultRingTone.wav</file>
+        <file>img/logo.svg</file>
+        <file>img/background.png</file>
+        <file>img/settings.svg</file>
+        <file>img/backarrow.svg</file>
+        <file>img/hangup.svg</file>
+        <file>img/microphone-slash.svg</file>
+        <file>img/microphone.svg</file>
+        <file>img/volume.svg</file>
+        <file>img/volume-down.svg</file>
+        <file>qml/qtquickcontrols2.conf</file>
+        <file>qml/main.qml</file>
+        <file>qml/Theme.qml</file>
+        <file>qml/qmldir</file>
+        <file>qml/dialog/BusyDialog.qml</file>
+        <file>qml/dialog/IncomingCallDialog.qml</file>
+        <file>qml/dialog/MessageDialog.qml</file>
+        <file>qml/custom/TextButton.qml</file>
+        <file>qml/custom/ImageButton.qml</file>
+        <file>qml/custom/SettingsButton.qml</file>
+        <file>qml/custom/Logo.qml</file>
+        <file>qml/custom/CustomBusyIndicator.qml</file>
+        <file>qml/custom/BackButton.qml</file>
+        <file>qml/custom/LabelToolTip.qml</file>
+        <file>qml/custom/IntercomLabel.qml</file>
+        <file>qml/custom/CustomSlider.qml</file>
+        <file>qml/custom/CustomSwitch.qml</file>
+        <file>qml/custom/IconTextButton.qml</file>
+        <file>qml/custom/ActiveCallTimer.qml</file>
+        <file>qml/custom/CustomButton.qml</file>
+        <file>qml/StartCall.qml</file>
+        <file>qml/DeviceList.qml</file>
+        <file>qml/Settings.qml</file>
+        <file>qml/ActiveCall.qml</file>
+    </qresource>
+</RCC>
