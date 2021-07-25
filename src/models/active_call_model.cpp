@@ -45,11 +45,14 @@ QHash<int,QByteArray> ActiveCallModel::roleNames() const
     return roles;
 }
 
-void ActiveCallModel::addCall(int callId, const QString &address)
+void ActiveCallModel::addCall(int callId, const QString &deviceUuid, const QString &name)
 {
     if (PJSUA_INVALID_ID == callId) {
-        qWarning() << "Invalid call ID";
+        qCritical() << "Invalid call ID";
         return;
+    }
+    if (deviceUuid.isEmpty()) {
+        qWarning() << "Dev. UUID is empty";
     }
     qDebug() << "addCall" << callId;
     emit layoutAboutToBeChanged();
@@ -57,12 +60,14 @@ void ActiveCallModel::addCall(int callId, const QString &address)
         CallInfo info;
         info.callStartTime = QDateTime::currentDateTime();
         info.callState = CallState::PENDING;
-        info.remoteAddress = address;
+        info.name = name;
+        info.deviceUuid = deviceUuid;
         _callInfo[callId] = info;
         _callOrder.append(callId);
         emit callCountChanged();
-    /*} else {
-        auto &info = _callInfo[callId];*/
+    } else if (!deviceUuid.isEmpty()) {
+        _callInfo[callId].name = name;
+        _callInfo[callId].deviceUuid = deviceUuid;
     }
     emit layoutChanged();
     emit currentUserNameChanged();
@@ -86,6 +91,7 @@ void ActiveCallModel::removeCall(int callId)
         _callInfo.remove(callId);
         _callOrder.removeAll(callId);
         emit callCountChanged();
+        qInfo() << "Removed call ID" << callId;
     } else {
         qWarning() << "Cannot find call ID" << callId;
     }
@@ -99,6 +105,24 @@ void ActiveCallModel::removeCall(int callId)
     }
     setCurrentCallId(callId);
     emit layoutChanged();
+}
+
+QString ActiveCallModel::deviceUuid(int callId) const
+{
+    QString uuid;
+    if (_callInfo.contains(callId)) {
+        uuid = _callInfo.value(callId).deviceUuid;
+    }
+    return uuid;
+}
+
+QString ActiveCallModel::name(int callId) const
+{
+    QString name;
+    if (_callInfo.contains(callId)) {
+        name = _callInfo.value(callId).name;
+    }
+    return name;
 }
 
 QVector<int> ActiveCallModel::confirmedCallsId(bool includePending) const

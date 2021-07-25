@@ -24,9 +24,11 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
     QHash<int,QByteArray> roleNames() const;
 
-    void addCall(int callId, const QString &address);
+    void addCall(int callId, const QString &deviceUuid, const QString &name);
     void setCallState(int callId, CallState callState);
     void removeCall(int callId);
+    QString deviceUuid(int callId) const;
+    QString name(int callId) const;
 
     QVector<int> confirmedCallsId(bool includePending = false) const;
     bool isConference() const { return 1 < confirmedCallsId().size(); }
@@ -51,7 +53,8 @@ private:
         QDateTime callStartTime;
         bool incoming = true;
         CallState callState = CallState::UNKNOWN;
-        QString remoteAddress;
+        QString name;
+        QString deviceUuid;
     };
     bool isCurrentCall(int callId) const;
     bool isValidIndex(int index) const {
