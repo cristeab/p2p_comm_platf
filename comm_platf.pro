@@ -102,7 +102,8 @@ ios {
             -lopus \
             -L$$PWD/../$${LIBOPUS_BUILD_FOLDER}/lib \
             -framework CFNetwork \
-            -framework Contacts
+            -framework Contacts \
+            -framework BackgroundTasks
 
     Q_ENABLE_BITCODE.name = ENABLE_BITCODE
     Q_ENABLE_BITCODE.value = NO
