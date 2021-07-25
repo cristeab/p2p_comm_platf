@@ -1,6 +1,6 @@
 #!/bin/bash
 
-APP_NAME=intercom
+APP_NAME=P2pCommPlatform
 
 QT_VER=5.15.2
 QT_ROOT=$HOME/Qt/$QT_VER/ios
