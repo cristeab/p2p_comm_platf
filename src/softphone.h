@@ -16,7 +16,7 @@
 
 class Softphone : public QObject {
 	Q_OBJECT
-    QML_READABLE_PROPERTY(bool, registered, setRegistered, false)
+
     QML_READABLE_PROPERTY(bool, showBusy, setShowBusy, false)
 
     QML_WRITABLE_PROPERTY(QString, dialedText, setDialedText, "")
@@ -47,6 +47,17 @@ class Softphone : public QObject {
     QML_READABLE_PROPERTY(QStringList, deviceList, setDeviceList, QStringList())
     QML_READABLE_PROPERTY(QString, currentDeviceName, setCurrentDeviceName, "")
 
+private:
+    struct ZeroConfItem {
+        QString name;
+        QString address;
+        QString port;
+        QString uuid;
+        void clear() {
+            name = address = port = uuid = "";
+        }
+    };
+
 public:
     enum CallState { NONE, OUTGOING, INCOMING, ACTIVE };
     Q_ENUM(CallState)
@@ -62,7 +73,6 @@ public:
     Q_INVOKABLE bool answer(int callId);
     Q_INVOKABLE bool hangup(int callId);
     Q_INVOKABLE void hangupAll();
-    Q_INVOKABLE bool holdAndAnswer(int callId);
     Q_INVOKABLE bool swap(int callId);
     Q_INVOKABLE bool merge(int callId);
     Q_INVOKABLE void onCurrentUserTimeout();
@@ -72,7 +82,6 @@ public:
     bool hold(bool value, int callId);
     bool muteMicrophone(bool value, int callId);
     QString convertNumber(const QString &num);
-    bool registered() const { return _registered; }
     void release();
 
     static void showMessage(const QString &msg, bool error);
@@ -82,8 +91,9 @@ public:
 signals:
     void disconnected(int callId);
     void confirmed(int callId);
-    void calling(int callId, const QString &address);
-    void incoming(int callCount, int callId, const QString &address, const QString &userName, bool isConf);
+    void calling(int callId, const QString &deviceUuid, const QString &name);
+    void incoming(int callCount, int callId, const ZeroConfItem &zcItem, bool isConf);
+    void incomingMessageDialog(int callCount, int callId, const QString &userName, bool isConf);
     void phoneStateChanged();
     void audioDevicesChanged();
     void showMessageDialog(const QString &message, bool error, bool retry);
@@ -95,12 +105,13 @@ private:
                             MERGE_CALLS = 0x04 };
     enum SipErrorCodes { BadRequest = 400, RequestTimeout = 408, RequestTerminated = 487,
                          ServiceUnavailable = 503 };
-    enum { DEFAULT_SIP_PORT = 5060, ZERO_CONF_PORT = 11437, RETRY_TIMEOUT_MS = 1000 };
+    enum { DEFAULT_SIP_PORT = 5060, ZERO_CONF_PORT = 11437, RETRY_TIMEOUT_MS = 1000,
+           CALL_DURATION_PERIOD_MS = 1000, MAX_CODEC_COUNT = 32,
+           ERROR_MSG_SIZE = 1024, STARTUP_TIMEOUT_MS = 3000 };
 
     static const char *userAgentValue();
     void initAudioDevicesList();
 
-    static void onRegState(pjsua_acc_id acc_id);
     static void onIncomingCall(pjsua_acc_id acc_id, pjsua_call_id call_id,
                                pjsip_rx_data *rdata);
     static void onCallState(pjsua_call_id call_id, pjsip_event *e);
@@ -112,9 +123,8 @@ private:
     static void pjsuaLogCallback(int level, const char *data, int len);
 
     void onConfirmed(int callId);
-    void onCalling(int callId, const QString &address);
-    void onIncoming(int callCount, int callId, const QString &address,
-                    const QString &userName, bool isConf);
+    void onCalling(int callId, const QString &deviceUuid, const QString &name);
+    void onIncoming(int callCount, int callId, const ZeroConfItem &zcItem, bool isConf);
     void onDisconnected(int callId);
 
     bool initRingTonePlayer(pjsua_call_id id);
@@ -161,9 +171,11 @@ private:
     void startPublish();
     void addService(QZeroConfService item);
     void removeService(QZeroConfService item);
-    void removeServiceWithAddress(const QString &address);
+    void removeServiceWithUuid(const QString &uuid);
     void updateService(QZeroConfService item);
-    bool extractAddressUserName(QString &addr, QString &user, const QString &info);
+    void updateServiceWithItem(const ZeroConfItem &zcItem);
+    void extractAddressUserName(ZeroConfItem &zcItem, const QString &remoteContact,
+                                const QString &localInfo);
     void setupAudioCodecPriority();
     static pjmedia_codec_mgr* pjMediaCodecMgr();
 
@@ -173,11 +185,14 @@ private:
 
     void onRetryConnection();
     void resetElapsedTimer();
+    static QString deviceName();
+    static QString generateDeviceUuid();
+    void updateCurrentDeviceName(const QString &name, bool add);
 
     QTimer _currentUserTimer;
     static const QString _notAvailable;
     bool _pjsuaStarted = false;
-    QString _registrarPort;
+    QString _localPort;
     pjsua_acc_id _accId = PJSUA_INVALID_ID;
     QHash<pjsua_call_id, pjsua_player_id> _playerId;
     QHash<pjsua_call_id, pjsua_recorder_id> _recId;
@@ -185,13 +200,9 @@ private:
     bool _manualHangup = false;
     bool _isUdpTransport = false;
     QHash<QString,pjsua_buddy_id> _userId2BuddyId;
-    struct ZeroConfItem {
-        QString name;
-        QString address;
-        QString port;
-    };
     QZeroConf _zeroConf;
     QList<ZeroConfItem> _zeroConfList;
     QElapsedTimer _retryElapsedTimer;
     pjmedia_codec_info _opusCodecInfo;
+    const QString _deviceUuid;
 };

@@ -1,5 +1,5 @@
 #include "softphone.h"
-#if defined(Q_OS_IOS)
+#ifdef Q_OS_IOS
 #include "audio_session.h"
 #include "app_delegate.h"
 #endif
@@ -15,21 +15,26 @@
 #include <QTcpServer>
 #include <QHostInfo>
 #include <QNetworkInterface>
+#include <QUuid>
+#include <QCryptographicHash>
 
-#define ZERO_CONF_REGISTRAR_PORT "registrarPort"
+#define ZERO_CONF_SIP_PORT "sipPort"
+#define ZERO_CONF_DEVICE_UUID "deviceUuid"
 #define ZERO_CONF_TYPE "_sip._tcp"
 
 static Softphone *_instance = nullptr;
 const QString Softphone::_notAvailable = tr("Unknown");
 
-Softphone::Softphone()
+Softphone::Softphone() : _deviceUuid(generateDeviceUuid())
 {
     setObjectName("softphone");
     qmlRegisterType<Softphone>("Softphone", 1, 0, "Softphone");
+    qRegisterMetaType<ZeroConfItem>("ZeroConfItem");
+
     _instance = this;
 
     //setup call duration timer
-    _currentUserTimer.setInterval(1000);
+    _currentUserTimer.setInterval(CALL_DURATION_PERIOD_MS);
     _currentUserTimer.setSingleShot(false);
     _currentUserTimer.setTimerType(Qt::PreciseTimer);
     _currentUserTimer.stop();
@@ -76,13 +81,11 @@ Softphone::Softphone()
         }
     });
     //connection with enable speakers
-    connect(this, &Softphone::enableSpeakerChanged, this, [this]() {
 #if defined(Q_OS_IOS)
+    connect(this, &Softphone::enableSpeakerChanged, this, [this]() {
         audioOutputSpeaker(_enableSpeaker);
-#else
-        qCritical() << "Not implemented";
-#endif
     });
+#endif
     //connection with hold call
     connect(this, &Softphone::holdCallChanged, this, [this]() {
         const auto cid = _activeCallModel->currentCallId();
@@ -129,6 +132,13 @@ Softphone::Softphone()
     connect(&_zeroConf, &QZeroConf::serviceRemoved, this, &Softphone::removeService);
     connect(&_zeroConf, &QZeroConf::serviceUpdated, this, &Softphone::updateService);
     connect(this, &Softphone::audioDevicesChanged, this, &Softphone::initAudioDevicesList);
+
+    QTimer::singleShot(STARTUP_TIMEOUT_MS, this, [this]() {
+        qInfo() << "Startup";
+        if (init()) {
+            zeroConf(true);
+        }
+    });
 }
 
 Softphone::~Softphone()
@@ -152,70 +162,41 @@ void Softphone::onConfirmed(int callId)
     }
 }
 
-void Softphone::onCalling(int callId, const QString &address)
+void Softphone::onCalling(int callId, const QString &deviceUuid, const QString &name)
 {
-    _activeCallModel->addCall(callId, address);
+    _activeCallModel->addCall(callId, deviceUuid, name);
 }
 
-void Softphone::onIncoming(int callCount, int callId, const QString &address,
-                           const QString &userName, bool isConf)
+void Softphone::onIncoming(int callCount, int callId, const ZeroConfItem &zcItem, bool isConf)
 {
+    emit incomingMessageDialog(callCount, callId, zcItem.name, isConf);
     qDebug() << "Call count" << callCount << ", CID" << callId;
     Q_UNUSED(callCount)
     Q_UNUSED(isConf)
     //open audio device only when needed (automatically closed when the call ends)
     setAudioDevices();
-    setCurrentDeviceName(userName);
-    _activeCallModel->addCall(callId, address);
+    updateCurrentDeviceName(zcItem.name, true);
+    _activeCallModel->addCall(callId, zcItem.uuid, zcItem.name);
     startPlayingRingTone(callId);
+    updateServiceWithItem(zcItem);
 }
 
 void Softphone::onDisconnected(int callId)
 {
     qDebug() << "onDisconnected" << callId;
     stopPlayingRingTone(callId);
+
+    const auto name = _activeCallModel->name(callId);
+    updateCurrentDeviceName(name, false);
     _activeCallModel->removeCall(callId);
 
-    //setDialedText(_activeCallModel->currentPhoneNumber());
-    setActiveCall(false);
+    if (0 == _activeCallModel->callCount()) {
+        setActiveCall(false);
+    }
 #if defined(Q_OS_IOS)
     disableAudioSession();
     pjsua_set_no_snd_dev();
 #endif
-}
-
-void Softphone::onRegState(pjsua_acc_id acc_id)
-{
-    if (nullptr == _instance) {
-        return;
-    }
-    pjsua_acc_info info;
-    pj_status_t status = pjsua_acc_get_info(acc_id, &info);
-    if (PJ_SUCCESS != status) {
-        _instance->errorHandler("Cannot get account information", status, true);
-    } else {
-        _instance->setRegistered(PJSIP_SC_OK == info.status);
-        if (_instance->_registered) {
-            qInfo() << "Logged in";
-            _instance->setShowBusy(false);
-        }
-        const pj_str_t statusText = info.status_text;
-        const QString msg = QString::fromUtf8(pj_strbuf(&statusText),
-                                        static_cast<int>(pj_strlen(&statusText)));
-        qDebug() << "Registration status" << msg;
-        if (!_instance->_registered &&
-                (PJSIP_SC_TRYING != info.status) &&
-                (PJSIP_SC_REQUEST_TIMEOUT != info.status)) {
-            _instance->setShowBusy(false);
-            if (PJSIP_SC_UNAUTHORIZED == info.status) {
-                _instance->errorHandler(msg, PJ_SUCCESS, true);
-                return;
-            }
-            const auto retry = (PJSIP_SC_SERVICE_UNAVAILABLE == info.status) ||
-                    (PJSIP_SC_TEMPORARILY_UNAVAILABLE == info.status);
-            emit _instance->showMessageDialog("Registration status "+msg, true, retry);
-        }
-    }
 }
 
 bool Softphone::setAudioCodecPriority(const QString &codecId, int priority)
@@ -229,7 +210,7 @@ bool Softphone::setAudioCodecPriority(const QString &codecId, int priority)
     pj_cstr(&pjCodecId, stdCodecId.c_str());
     const auto status = pjsua_codec_set_priority(&pjCodecId, priority);
     if (PJ_SUCCESS == status) {
-        qInfo() << "Changed codec priority" << codecId << priority;
+        //qInfo() << "Changed codec priority" << codecId << priority;
     } else {
         errorHandler("Cannot set codec priority", status);
     }
@@ -248,17 +229,17 @@ void Softphone::onIncomingCall(pjsua_acc_id acc_id, pjsua_call_id callId,
 
     pjsua_call_info ci;
     pjsua_call_get_info(callId, &ci);
-    const auto info = toString(ci.remote_info);
-    qInfo() << "Incoming call from" << info;
+    const auto remoteContact = toString(ci.remote_contact);
+    const auto localInfo = toString(ci.local_info);
+    qInfo() << "Incoming call from" << remoteContact << "to" << localInfo;
 
-    QString address;
-    QString userName;
-    _instance->extractAddressUserName(address, userName, info);
+    ZeroConfItem zcItem;
+    _instance->extractAddressUserName(zcItem, remoteContact, localInfo);
 
     const auto isConf = _instance->_activeCallModel->isConference();
-    emit _instance->incoming(pjsua_call_get_count(), callId, address, userName, isConf);
-#if Q_OS_IOS
-    startLocalNotification();
+    emit _instance->incoming(pjsua_call_get_count(), callId, zcItem, isConf);
+#ifdef Q_OS_IOS
+    //startLocalNotification(userName);
 #endif
 }
 
@@ -279,15 +260,9 @@ void Softphone::onCallState(pjsua_call_id callId, pjsip_event *e)
     const QString status = toString(ci.last_status_text);
     qDebug() << "Call" << callId << ", state =" << info << "(" << ci.last_status << ")" << status;
 
-    const auto remoteInfo = toString(ci.remote_info);
-    QString address;
-    QString userName;
-    _instance->extractAddressUserName(address, userName, remoteInfo);
-    qDebug() << "Remote info" << remoteInfo;
-
     const auto lastStatus = static_cast<SipErrorCodes>(ci.last_status);
     if (SipErrorCodes::ServiceUnavailable == lastStatus) {
-        _instance->removeServiceWithAddress(address);
+        _instance->removeServiceWithUuid(_instance->_activeCallModel->deviceUuid(callId));
     }
 
     if ((SipErrorCodes::BadRequest <= lastStatus) &&
@@ -311,8 +286,13 @@ void Softphone::onCallState(pjsua_call_id callId, pjsip_event *e)
     switch (ci.state) {
     case PJSIP_INV_STATE_NULL:
         break;
-    case PJSIP_INV_STATE_CALLING:
-        emit _instance->calling(callId, address);
+    case PJSIP_INV_STATE_CALLING: {
+        ZeroConfItem zcItem;
+        const auto remoteContact = toString(ci.remote_contact);
+        const auto localInfo = toString(ci.local_info);
+        _instance->extractAddressUserName(zcItem, remoteContact, localInfo);
+        emit _instance->calling(callId, zcItem.uuid, zcItem.name);
+    }
         //outgoing calls use standard ring tone
         break;
     case PJSIP_INV_STATE_INCOMING:
@@ -454,7 +434,6 @@ bool Softphone::init()
 
         pjsua_config_default(&cfg);
         cfg.max_calls = PJSUA_MAX_CALLS;
-        cfg.cb.on_reg_state = &onRegState;
         cfg.cb.on_incoming_call = &onIncomingCall;
         cfg.cb.on_call_media_state = &onCallMediaState;
         cfg.cb.on_call_state = &onCallState;
@@ -466,8 +445,8 @@ bool Softphone::init()
 
         pjsua_logging_config_default(&log_cfg);
         log_cfg.msg_logging = PJ_TRUE;
-        log_cfg.level = 6;
-        log_cfg.console_level = 6;
+        log_cfg.level = 0;
+        log_cfg.console_level = 0;
         log_cfg.cb = Softphone::pjsuaLogCallback;
 
         pjsua_media_config media_cfg;
@@ -500,8 +479,8 @@ bool Softphone::init()
             errorHandler("Error getting transport info", status, true);
             return false;
         }
-        _registrarPort = QString::number(info.local_name.port);
-        qInfo() << "Registrar port" << _registrarPort;
+        _localPort = QString::number(info.local_name.port);
+        qInfo() << "Local port" << _localPort;
         // Add local account
         status = pjsua_acc_add_local(transportId, PJ_TRUE, &_accId);
         if (PJ_SUCCESS != status) {
@@ -589,6 +568,10 @@ bool Softphone::makeCall(int zeroConfIndex)
 
     setActiveCall(true);
     setCurrentDeviceName(_deviceList.at(zeroConfIndex));
+    if (nullptr != _activeCallModel) {
+        _activeCallModel->addCall(callId, _zeroConfList.at(zeroConfIndex).uuid,
+                                  _zeroConfList.at(zeroConfIndex).name);
+    }
     return true;
 }
 
@@ -617,6 +600,7 @@ bool Softphone::hangup(int callId)
         qCritical() << "Invalid call ID";
         return false;
     }
+    qDebug() << "Hangup" << callId;
 
     _manualHangup = true;
     const pj_status_t status = pjsua_call_hangup(callId, 0, nullptr, nullptr);
@@ -625,15 +609,6 @@ bool Softphone::hangup(int callId)
         return false;
     }
     return true;
-}
-
-bool Softphone::holdAndAnswer(int callId)
-{
-    const auto callIds = _activeCallModel->confirmedCallsId();
-    for (auto cid: callIds) {
-        hold(true, cid);
-    }
-    return answer(callId);
 }
 
 bool Softphone::swap(int callId)
@@ -658,8 +633,8 @@ bool Softphone::swap(int callId)
 
 bool Softphone::merge(int callId)
 {
-    qDebug() << "merge" << callId;
-    if (!hold(false, callId)) {
+    qDebug() << "Merge" << callId;
+    if (!answer(callId)) {
         return false;
     }
     setupConferenceCall(callId);
@@ -669,7 +644,7 @@ bool Softphone::merge(int callId)
 
 bool Softphone::hold(bool value, int callId)
 {
-    qDebug() << "hold" << value;
+    qDebug() << "Hold" << value;
     if (PJSUA_INVALID_ID == callId) {
         callId = _activeCallModel->currentCallId();
     }
@@ -716,8 +691,8 @@ void Softphone::initAudioDevicesList()
     }
 
     unsigned devCount = PJMEDIA_AUD_MAX_DEVS;
-    pjmedia_aud_dev_info devInfo[PJMEDIA_AUD_MAX_DEVS];
-    status = pjsua_enum_aud_devs(devInfo, &devCount);
+    std::array<pjmedia_aud_dev_info, PJMEDIA_AUD_MAX_DEVS> devInfo;
+    status = pjsua_enum_aud_devs(devInfo.data(), &devCount);
     if (PJ_SUCCESS != status) {
         errorHandler("Cannot get audio device info.", status, true);
         return;
@@ -730,12 +705,12 @@ void Softphone::initAudioDevicesList()
         if (0 < devInfo[i].input_count) {
             const AudioDevices::DeviceInfo audioInfo{devInfo[i].name, static_cast<int>(i)};
             inputDevices.push_back(audioInfo);
-            qDebug() << "Audio input" << audioInfo.name << audioInfo.index;
+            //qDebug() << "Audio input" << audioInfo.name << audioInfo.index;
         }
         if (0 < devInfo[i].output_count) {
             const AudioDevices::DeviceInfo audioInfo{devInfo[i].name, static_cast<int>(i)};
             outputDevices.push_back(audioInfo);
-            qDebug() << "Audio output" << audioInfo.name << audioInfo.index;
+            //qDebug() << "Audio output" << audioInfo.name << audioInfo.index;
         }
     }
     if (inputDevices.isEmpty()) {
@@ -823,7 +798,7 @@ bool Softphone::initRingTonePlayer(pjsua_call_id id)
     pj_str_t soundFile;
     pj_cstr(&soundFile, tmpSoundFile.c_str());
 
-    pjsua_player_id playerId;
+    pjsua_player_id playerId = PJSUA_INVALID_ID;
     const pj_status_t status = pjsua_player_create(&soundFile, 0, &playerId);
     if (PJ_SUCCESS != status) {
         errorHandler("Cannot create player", status, false);
@@ -897,9 +872,9 @@ void Softphone::releaseRingTonePlayers()
 
 void Softphone::setupAudioCodecPriority()
 {
-    pjsua_codec_info codecInfo[32];
-    unsigned int codecCount = sizeof(codecInfo)/sizeof(codecInfo[0]);
-    pj_status_t status = pjsua_enum_codecs(codecInfo, &codecCount);
+    std::array<pjsua_codec_info, MAX_CODEC_COUNT> codecInfo;
+    unsigned int codecCount = codecInfo.size();
+    pj_status_t status = pjsua_enum_codecs(codecInfo.data(), &codecCount);
     if (PJ_SUCCESS != status) {
         errorHandler("Cannot enum audio codecs", status);
         return;
@@ -912,16 +887,17 @@ void Softphone::setupAudioCodecPriority()
         if (id.contains("opus", Qt::CaseInsensitive)) {
             priority = PJMEDIA_CODEC_PRIO_HIGHEST;
             unsigned count = 1;
-            const pjmedia_codec_info *codecInfoArr[] = { &_opusCodecInfo };
+            const pjmedia_codec_info *mediaCodecInfo = nullptr;
             auto *codecMgr = pjMediaCodecMgr();
             if (nullptr != codecMgr) {
                 status = pjmedia_codec_mgr_find_codecs_by_id(codecMgr,
                                                              &codecInfo[n].codec_id,
                                                              &count,
-                                                             codecInfoArr,
+                                                             &mediaCodecInfo,
                                                              nullptr);
-                if (PJ_SUCCESS == status) {
+                if ((PJ_SUCCESS == status) && (nullptr != mediaCodecInfo)) {
                     qInfo() << "Got OPUS codec info";
+                    pj_memcpy(&_opusCodecInfo, mediaCodecInfo, sizeof(*mediaCodecInfo));
                 } else {
                     errorHandler("Cannot find codec by ID", status, false);
                 }
@@ -930,7 +906,7 @@ void Softphone::setupAudioCodecPriority()
             priority = PJMEDIA_CODEC_PRIO_DISABLED;
         }
         setAudioCodecPriority(id, priority);
-        qInfo() << id << priority;
+        //qInfo() << id << priority;
     }
 }
 
@@ -993,9 +969,9 @@ void Softphone::errorHandler(const QString &title, pj_status_t status, bool emit
 {
     QString fullError = title;
     if (PJ_SUCCESS != status) {
-        char message[1024];
-        pj_strerror(status, message, sizeof(message));
-        fullError.append(":").append(message);
+        std::array<char, ERROR_MSG_SIZE> message;
+        pj_strerror(status, message.data(), message.size());
+        fullError.append(":").append(message.data());
     }
     if (emitSignal) {
         Softphone::showMessage(fullError, true);
@@ -1046,7 +1022,9 @@ bool Softphone::callUri(pj_str_t *uri, int zeroConfIndex, std::string &uriBuffer
 {
     const auto serverUrl = _zeroConfList.at(zeroConfIndex).address;
     const auto serverPort = _zeroConfList.at(zeroConfIndex).port;
-    const QString sipUri = "sip:" + serverUrl + this->serverPort(serverPort) + currentTransport();
+    const QString sipUri = "\"" + deviceName() + "\" <sip:" + serverUrl +
+            this->serverPort(serverPort) + currentTransport() +
+            QString(";uuid=\"%1\">").arg(_deviceUuid);
     uriBuffer = sipUri.toStdString();
     const char *uriPtr = uriBuffer.c_str();
     const pj_status_t status = pjsua_verify_sip_url(uriPtr);
@@ -1124,9 +1102,9 @@ void Softphone::onCurrentUserTimeout()
 {
     unsigned txLevel = 0;
     unsigned rxLevel = 0;
-    pjsua_conf_port_id confId[PJSUA_MAX_CONF_PORTS];
-    unsigned count = PJSUA_MAX_CONF_PORTS;
-    auto status = pjsua_enum_conf_ports(confId, &count);
+    std::array<pjsua_conf_port_id, PJSUA_MAX_CONF_PORTS> confId;
+    unsigned count = confId.size();
+    auto status = pjsua_enum_conf_ports(confId.data(), &count);
     if (PJ_SUCCESS != status) {
         errorHandler("Cannot get conf ports", status, false);
         return;
@@ -1247,35 +1225,92 @@ void Softphone::showMessage(const QString &msg, bool error)
     }
 }
 
+QString Softphone::deviceName()
+{
+    return QHostInfo::localHostName();
+}
+
+QString Softphone::generateDeviceUuid()
+{
+    QString uuid;
+#ifdef Q_OS_IOS
+    uuid = deviceUuid();
+#else
+    const auto allIf = QNetworkInterface::allInterfaces();
+    for (const auto &it: allIf) {
+        const auto type = it.type();
+        if (it.isValid() &&
+                !(it.flags() & QNetworkInterface::IsLoopBack) &&
+                ((QNetworkInterface::Ethernet == type) || (QNetworkInterface::Wifi == type))) {
+            const auto &mac = it.hardwareAddress();
+            if (!mac.isEmpty() && !mac.endsWith("00:00:00")) {
+                uuid = QCryptographicHash::hash(mac.toUtf8(), QCryptographicHash::Sha256).toHex();
+                break;
+            }
+        }
+    }
+#endif
+    if (uuid.isEmpty()) {
+        qWarning() << "Invalid UUID, using random UUID";
+        uuid = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    }
+    qInfo() << "Device UUID" << uuid;
+    return uuid;
+}
+
+void Softphone::updateCurrentDeviceName(const QString &name, bool add)
+{
+    if (name.isEmpty()) {
+        qWarning() << "Cannot update current device name";
+        return;
+    }
+    if (add) {
+        if (_currentDeviceName.isEmpty()) {
+            _currentDeviceName = name;
+        } else {
+            _currentDeviceName += ", " + name;
+        }
+    } else {
+        if (_currentDeviceName == name) {
+            _currentDeviceName.clear();
+        } else if (_currentDeviceName.startsWith(name)) {
+            _currentDeviceName.remove(name + ", ");
+        } else {
+            _currentDeviceName.remove(", " + name);
+        }
+    }
+    emit currentDeviceNameChanged();
+}
+
 void Softphone::startPublish()
 {
-    if (_registrarPort.isEmpty()) {
-        showMessageDialog(tr("Registrar port is not set"), true, false);
+    if (_localPort.isEmpty()) {
+        emit showMessageDialog(tr("Registrar port is not set"), true, false);
         return;
     }
     _zeroConf.clearServiceTxtRecords();
-    _zeroConf.addServiceTxtRecord(ZERO_CONF_REGISTRAR_PORT, _registrarPort);
-    const auto itemName = QHostInfo::localHostName().toUtf8();
-    _zeroConf.startServicePublish(itemName, ZERO_CONF_TYPE,
+    _zeroConf.addServiceTxtRecord(ZERO_CONF_SIP_PORT, _localPort);
+     _zeroConf.addServiceTxtRecord(ZERO_CONF_DEVICE_UUID, _deviceUuid);
+    const auto itemName = deviceName();
+    _zeroConf.startServicePublish(itemName.toUtf8(), ZERO_CONF_TYPE,
                                   nullptr, ZERO_CONF_PORT);
     qInfo() << "Start publish service" << itemName;
 }
 
 void Softphone::addService(QZeroConfService item)
 {
-    const auto port = item->txt().value(ZERO_CONF_REGISTRAR_PORT);
-    qDebug() << "Added service:" << item << port;
+    qDebug() << "Added service:" << item;
 
     //filter own service
-    const auto itemIp = item->ip().toString();
-    const auto devAddr = QHostAddress(itemIp);
+    const auto addr = item->ip().toString();
+    const auto devAddr = QHostAddress(addr);
     if (devAddr.isLoopback()) {
         qDebug() << "Skip loopback address";
         return;
     }
     //filter class B Private APIPA Range: 169.254.0.0 to 169.254.255.255
     if (devAddr.isLinkLocal()) {
-        qDebug() << "Skip Class B Private APIPA address" << itemIp;
+        qDebug() << "Skip Class B Private APIPA address" << addr;
         return;
     }
     //filter own address
@@ -1284,83 +1319,142 @@ void Softphone::addService(QZeroConfService item)
         qDebug() << "Skip own address";
         return;
     }
-    //filter existing devices
-    for (const auto &zc: qAsConst(_zeroConfList)) {
-        if ((zc.address == itemIp) && (zc.port == port)) {
-            qDebug() << "Skip existing device" << zc.name << item->name();
-            return;
+
+    const auto name = item->name();
+    const auto port = item->txt().value(ZERO_CONF_SIP_PORT);
+    const auto uuid = item->txt().value(ZERO_CONF_DEVICE_UUID);
+    ZeroConfItem zeroConfItem{ name, addr, port, uuid };
+    if (zeroConfItem.uuid.isEmpty()) {
+        qWarning() << "Invalid UUID";
+        return;
+    }
+
+    //update existing service
+    bool found = false;
+    for (int i = 0; i < _zeroConfList.size(); ++i) {
+        if (_zeroConfList.at(i).uuid == uuid) {
+            qDebug() << "Update existing service";
+            _zeroConfList[i] = zeroConfItem;
+            _deviceList[i] = name;
+            found = true;
+            break;
         }
     }
 
-    const auto &itemName = item->name();
-    ZeroConfItem zeroConfItem{ itemName, itemIp, port };
-    _zeroConfList << zeroConfItem;
-    _deviceList << itemName;
+    if (!found) {
+        _zeroConfList << zeroConfItem;
+        _deviceList << name;
+    }
     emit deviceListChanged();
 }
 
 void Softphone::removeService(QZeroConfService item)
 {
     qDebug() << "Zero conf remove service:" << item;
-    return;//service will be removed when the call is rejected with 503 SIP error
+    if (!item.isNull()) {
+        const auto uuid = item->txt().value(ZERO_CONF_DEVICE_UUID);
+        removeServiceWithUuid(uuid);
+    } else {
+        qWarning() << "Cannot remove service";
+    }
 }
 
-void Softphone::removeServiceWithAddress(const QString &address)
+void Softphone::removeServiceWithUuid(const QString &uuid)
 {
-    qDebug() << "Remove service:" << address;
+    qDebug() << "Remove service" << uuid;
+    if (uuid.isEmpty()) {
+        qWarning() << "Invalid UUID";
+        return;
+    }
     for (int i = 0; i < _zeroConfList.size(); ++i) {
-        if (address == _zeroConfList.at(i).address) {
+        if (uuid == _zeroConfList.at(i).uuid) {
             _zeroConfList.removeAt(i);
             _deviceList.removeAt(i);
             emit deviceListChanged();
+            qInfo() << "Service removed" << uuid;
             return;
         }
     }
-    qWarning() << "Cannot remove service" << address;
 }
 
 void Softphone::updateService(QZeroConfService item)
 {
     qDebug() << "Update service:" << item;
-    const auto &itemName = item->name();
+    if (item.isNull()) {
+        qWarning() << "Cannot update service";
+        return;
+    }
+    const auto uuid = item->txt().value(ZERO_CONF_DEVICE_UUID);
+    if (uuid.isEmpty()) {
+        qWarning() << "Invalid UUID";
+        return;
+    }
     for (int i = 0; i < _zeroConfList.size(); ++i) {
-        if (itemName == _zeroConfList.at(i).name) {
+        if (uuid == _zeroConfList.at(i).uuid) {
+            _zeroConfList[i].name = item->name();
             _zeroConfList[i].address = item->ip().toString();
-            _zeroConfList[i].port = item->txt().value(ZERO_CONF_REGISTRAR_PORT);
+            _zeroConfList[i].port = item->txt().value(ZERO_CONF_SIP_PORT);
             return;
         }
     }
 }
 
-bool Softphone::extractAddressUserName(QString &addr, QString &user, const QString &info)
+void Softphone::updateServiceWithItem(const ZeroConfItem &zcItem)
 {
-    const static QRegularExpression re("<sip:([\\d|\\.]*)>");
-    QRegularExpressionMatch match = re.match(info);
-    addr.clear();
-    user.clear();
-    if (match.hasMatch()) {
-        addr = match.captured(1);
-    } else {
-        //try to get the address between ':'
-        const auto tok = info.split(':');
-        if (1 < tok.size()) {
-            addr = tok.at(1);
+    qDebug() << "Update service:" << zcItem.uuid;
+    if (zcItem.uuid.isEmpty()) {
+        qWarning() << "Invalid UUID";
+        return;
+    }
+    bool foundItem = false;
+    for (int i = 0; i < _zeroConfList.size(); ++i) {
+        if (zcItem.uuid == _zeroConfList.at(i).uuid) {
+            _zeroConfList[i] = zcItem;
+            _deviceList[i] = zcItem.name;
+            foundItem = true;
         }
     }
-    if (!addr.isEmpty()) {
-        for (const auto &it: qAsConst(_zeroConfList)) {
-            if (addr == it.address) {
-                user = it.name;
-                break;
-            }
+    if (!foundItem) {
+        _zeroConfList << zcItem;
+        _deviceList << zcItem.name;
+    }
+    emit deviceListChanged();
+}
+
+void Softphone::extractAddressUserName(ZeroConfItem &zcItem, const QString &remoteContact,
+                                       const QString &localInfo)
+{
+    const static QRegularExpression addrRe("<sip:([\\d|\\.]+):(\\d+).+>");
+    const static QRegularExpression userRe("\"(.+)\"\\s*<sip:.+;uuid=\"(.+)\".*");
+
+    zcItem.clear();
+
+    if (!remoteContact.isEmpty()) {
+        QRegularExpressionMatch match = addrRe.match(remoteContact);
+        if (match.hasMatch()) {
+            zcItem.address = match.captured(1);
+            zcItem.port = match.captured(2);
+        } else {
+            qWarning() << "No remote contact match" << remoteContact;
         }
     } else {
-        qWarning() << "Cannot get address" << info;
+        qWarning() << "Remote contact is empty";
     }
-    if (user.isEmpty()) {
-        user = tr("Unknown");
+    if (!localInfo.isEmpty()) {
+        QRegularExpressionMatch match = userRe.match(localInfo);
+        if (match.hasMatch()) {
+            zcItem.name = match.captured(1);
+            zcItem.uuid = match.captured(2);
+        } else {
+            qWarning() << "No local info match" << localInfo;
+        }
+        if (zcItem.name.isEmpty()) {
+            zcItem.name = tr("Unknown");
+        }
+    } else {
+        qWarning() << "Local info is empty";
     }
-    return !addr.isEmpty() && !user.isEmpty();
+    qDebug() << "Matched" << zcItem.name << zcItem.address << zcItem.port << zcItem.uuid;
 }
 
 void Softphone::onRetryConnection()
@@ -1390,170 +1484,4 @@ void Softphone::resetElapsedTimer()
 {
     _retryElapsedTimer.invalidate();
     _instance->setShowBusy(false);
-}
-
-/*
- * A simple registrar, invoked by default_mod_on_rx_request()
- */
-void Softphone::simpleRegistrar(pjsip_rx_data *rdata)
-{
-    pjsip_tx_data *tdata = nullptr;
-    pj_status_t status = pjsip_endpt_create_response(pjsua_get_pjsip_endpt(),
-                                         rdata, 200, nullptr, &tdata);
-    if (status != PJ_SUCCESS) {
-        _instance->errorHandler("Cannot create endp response", status, true);
-        return;
-    }
-
-    const pjsip_expires_hdr *exp = static_cast<pjsip_expires_hdr*>(pjsip_msg_find_hdr(rdata->msg_info.msg,
-                                                             PJSIP_H_EXPIRES, nullptr));
-
-    const pjsip_hdr *h = rdata->msg_info.msg->hdr.next;
-    unsigned cnt = 0;
-    while (h != &rdata->msg_info.msg->hdr) {
-        if (h->type == PJSIP_H_CONTACT) {
-            const pjsip_contact_hdr *c = reinterpret_cast<const pjsip_contact_hdr*>(h);
-            int e = c->expires;
-
-            if (e < 0) {
-                if (exp) {
-                    e = exp->ivalue;
-                } else {
-                    e = 3600;
-                }
-            }
-
-            if (e > 0) {
-                pjsip_contact_hdr *nc = static_cast<pjsip_contact_hdr*>(pjsip_hdr_clone(
-                                                                            tdata->pool, h));
-                nc->expires = e;
-                pjsip_msg_add_hdr(tdata->msg, reinterpret_cast<pjsip_hdr*>(nc));
-                ++cnt;
-            }
-        }
-        h = h->next;
-    }
-
-    pjsip_generic_string_hdr *srv = pjsip_generic_string_hdr_create(tdata->pool, nullptr, nullptr);
-    static const std::string srvName("Server");
-    pj_cstr(&srv->name, srvName.c_str());
-    static const std::string srvHValue("pjsua simple registrar");
-    pj_cstr(&srv->hvalue, srvHValue.c_str());
-    pjsip_msg_add_hdr(tdata->msg, reinterpret_cast<pjsip_hdr*>(srv));
-
-    status = pjsip_endpt_send_response2(pjsua_get_pjsip_endpt(),
-                               rdata, tdata, nullptr, nullptr);
-    if (status != PJ_SUCCESS) {
-        _instance->errorHandler("Cannot send endp response", status, true);
-    }
-}
-
-/*****************************************************************************
- * A simple module to handle otherwise unhandled request.
- */
-
-/* Notification on incoming request */
-pj_bool_t Softphone::onRxRequest(pjsip_rx_data *rdata)
-{
-    /* Don't respond to ACK! */
-    if (pjsip_method_cmp(&rdata->msg_info.msg->line.req.method,
-                         &pjsip_ack_method) == 0) {
-        qInfo() << "Ignoring ACK request";
-        return PJ_TRUE;
-    }
-
-    /* Simple registrar */
-    if (pjsip_method_cmp(&rdata->msg_info.msg->line.req.method,
-                         &pjsip_register_method) == 0)
-    {
-        qInfo() << "Register method";
-        simpleRegistrar(rdata);
-        return PJ_TRUE;
-    }
-
-    /* Create basic response. */
-    pjsip_status_code status_code = PJSIP_SC_NULL;
-    if (pjsip_method_cmp(&rdata->msg_info.msg->line.req.method,
-                         &pjsip_notify_method) == 0)
-    {
-        /* Unsolicited NOTIFY's, send with Bad Request */
-        qWarning() << "Notify method";
-        status_code = PJSIP_SC_BAD_REQUEST;
-    } else {
-        /* Probably unknown method */
-        qWarning() << "Unknown method";
-        status_code = PJSIP_SC_METHOD_NOT_ALLOWED;
-    }
-    pjsip_tx_data *tdata = nullptr;
-    pj_status_t status = pjsip_endpt_create_response(pjsua_get_pjsip_endpt(),
-                                         rdata, status_code,
-                                         nullptr, &tdata);
-    if (status != PJ_SUCCESS) {
-        _instance->errorHandler("Unable to create response", status);
-        return PJ_TRUE;
-    }
-
-    /* Add Allow if we're responding with 405 */
-    if (status_code == PJSIP_SC_METHOD_NOT_ALLOWED) {
-        qWarning() << "Method not allowed";
-        const pjsip_hdr *cap_hdr;
-        cap_hdr = pjsip_endpt_get_capability(pjsua_get_pjsip_endpt(),
-                                             PJSIP_H_ALLOW, nullptr);
-        if (cap_hdr) {
-            pjsip_msg_add_hdr(tdata->msg, static_cast<pjsip_hdr*>(pjsip_hdr_clone(
-                                  tdata->pool, cap_hdr)));
-        }
-    }
-
-    qInfo() << "Add User-Agent header";
-    {
-        static const std::string userAgent("User-Agent");
-        pj_str_t USER_AGENT;
-        pj_cstr(&USER_AGENT, userAgent.c_str());
-
-        pj_str_t user_agent;
-        pj_strdup2_with_null(tdata->pool, &user_agent, Softphone::userAgentValue());
-
-        pjsip_hdr *h = reinterpret_cast<pjsip_hdr*>(pjsip_generic_string_hdr_create(tdata->pool,
-                                                         &USER_AGENT,
-                                                         &user_agent));
-        pjsip_msg_add_hdr(tdata->msg, h);
-    }
-
-    status = pjsip_endpt_send_response2(pjsua_get_pjsip_endpt(), rdata, tdata,
-                               nullptr, nullptr);
-    if (status != PJ_SUCCESS) {
-        _instance->errorHandler("Unable to send endp response", status);
-    }
-    return PJ_TRUE;
-}
-
-/* The module instance. */
-static pjsip_module mod_default_handler =
-{
-    nullptr, nullptr,				/* prev, next.		*/
-    { const_cast<char*>("mod-default-handler"), 19 },	/* Name.		*/
-    -1,					/* Id			*/
-    PJSIP_MOD_PRIORITY_APPLICATION,	/* Priority	        */
-    nullptr,				/* load()		*/
-    nullptr,				/* start()		*/
-    nullptr,				/* stop()		*/
-    nullptr,				/* unload()		*/
-    &Softphone::onRxRequest,		/* on_rx_request()	*/
-    nullptr,				/* on_rx_response()	*/
-    nullptr,				/* on_tx_request.	*/
-    nullptr,				/* on_tx_response()	*/
-    nullptr,				/* on_tsx_state()	*/
-
-};
-bool Softphone::initRegistrar()
-{
-    const pj_status_t status = pjsip_endpt_register_module(pjsua_get_pjsip_endpt(),
-                     &mod_default_handler);
-    if (status != PJ_SUCCESS) {
-        _instance->errorHandler("Cannot register module", status, true);
-        return false;
-    }
-    qInfo() << "Init registrar";
-    return true;
 }
