@@ -4,7 +4,7 @@ import QtQuick.Controls 2.12
 BusyIndicator {
     id: control
 
-    property color indicatorColor: "white"
+    property color indicatorColor: "black"
     property int indicatorHeight: 50
     property int itemHeight: 8
     property int itemCount: 8

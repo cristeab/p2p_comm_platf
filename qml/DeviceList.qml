@@ -5,19 +5,10 @@ import "custom"
 Page {
     background: Item {}
 
-    BackButton {
-        id: backBtn
+    SettingsButton {
+        id: settBtn
         anchors {
             top: parent.top
-            topMargin: Theme.marginFactor * Theme.windowMargin
-            left: parent.left
-            leftMargin: Theme.windowMargin
-        }
-        onBackAction: softphone.zeroConf(false)
-    }
-    SettingsButton {
-        anchors {
-            top: backBtn.top
             right: parent.right
             rightMargin: Theme.windowMargin
         }
@@ -26,7 +17,7 @@ Page {
     Column {
         id: headerCol
         anchors {
-            top: backBtn.bottom
+            top: settBtn.bottom
             topMargin: Theme.windowMargin
             left: parent.left
             leftMargin: 3 * Theme.windowMargin
@@ -42,13 +33,6 @@ Page {
             text: qsTr("Looking for other devices")
             font.pointSize: Theme.textFontSize
             wrapMode: Text.WordWrap
-        }
-        CustomBusyIndicator {
-            anchors.horizontalCenter: parent.horizontalCenter
-            indicatorHeight: Theme.busyHeight
-            height: indicatorHeight
-            width: height
-            running: true
         }
         Label {
             width: parent.width
@@ -113,5 +97,20 @@ Page {
             color: "white"
             radius: Theme.dialogBackgroundRadius
         }
+    }
+
+    Component {
+        id: busyComp
+        CustomBusyIndicator {
+            indicatorHeight: Theme.busyHeight
+            height: indicatorHeight
+            width: height
+            running: true
+        }
+    }
+    Loader {
+        active: 0 === devList.count
+        sourceComponent: busyComp
+        anchors.centerIn: devList
     }
 }
