@@ -5,6 +5,7 @@ APP_VERSION = 1.0.0
 
 CONFIG += c++17
 CONFIG += qtquickcompiler
+CONFIG += sdk_no_version_check
 
 #CONFIG(release, debug|release) {
 #    DEFINES += QT_NO_DEBUG_OUTPUT
