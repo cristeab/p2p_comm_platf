@@ -6,18 +6,25 @@ Page {
     background: Item {}
 
     SettingsButton {
-        id: settBtn
         anchors {
             top: parent.top
             right: parent.right
             rightMargin: Theme.windowMargin
         }
+    }   
+    Logo {
+        id: logoFrame
+        anchors {
+            top: parent.top
+            topMargin: Theme.windowMargin
+        }
+        width: parent.width
     }
 
     Column {
         id: headerCol
         anchors {
-            top: settBtn.bottom
+            top: logoFrame.bottom
             topMargin: Theme.windowMargin
             left: parent.left
             leftMargin: 3 * Theme.windowMargin
@@ -30,7 +37,7 @@ Page {
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
             color: "white"
-            text: qsTr("Looking for other devices")
+            text: qsTr("Looking for other devices.")
             font.pointSize: Theme.textFontSize
             wrapMode: Text.WordWrap
         }

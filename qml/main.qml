@@ -61,7 +61,7 @@ ApplicationWindow {
     StackView {
         id: tabView
         anchors.fill: parent
-        initialItem: "qrc:/qml/StartCall.qml"
+        initialItem: "qrc:/qml/DeviceList.qml"
         focus: true
     }
 

@@ -14,7 +14,7 @@ QtObject {
     readonly property int dialpadTextFontSize: 27
     readonly property int dialpadSubTextFontSize: 10
 
-    readonly property real logoFontSize: 30
+    readonly property real logoFontSize: 20
     readonly property real buttonFontSize: 20
     readonly property real buttonTextFontSize: 16
     readonly property real textFontSize: 18

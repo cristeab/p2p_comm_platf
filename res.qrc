@@ -30,7 +30,6 @@
         <file>qml/custom/IconTextButton.qml</file>
         <file>qml/custom/ActiveCallTimer.qml</file>
         <file>qml/custom/CustomButton.qml</file>
-        <file>qml/StartCall.qml</file>
         <file>qml/DeviceList.qml</file>
         <file>qml/Settings.qml</file>
         <file>qml/ActiveCall.qml</file>

@@ -3,7 +3,7 @@ import QtQuick.Controls 2.12
 import ".."
 
 Label {
-    text: "Peer to Peer<br>Communication<br>Platform"
+    text: "Peer to Peer<br>Communication Platform"
     wrapMode: Text.WordWrap
     width: appWin.width - 2 * Theme.windowMargin
     horizontalAlignment: Text.AlignHCenter
