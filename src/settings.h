@@ -20,21 +20,8 @@ class Settings : public QObject {
 
     QML_WRITABLE_PROPERTY_FLOAT(qreal, microphoneVolume, setMicrophoneVolume, 2.0)
     QML_WRITABLE_PROPERTY_FLOAT(qreal, speakersVolume, setSpeakersVolume, 2.0)
-    QML_WRITABLE_PROPERTY_FLOAT(qreal, dialpadSoundVolume, setDialpadSoundVolume, 0.5)
-
-    QML_WRITABLE_PROPERTY(int, bitrateKbps, setBitrateKbps, PJMEDIA_CODEC_OPUS_DEFAULT_BIT_RATE / 1000)
-    QML_WRITABLE_PROPERTY(int, sampRateKhz, setSampRateKhz, PJMEDIA_CODEC_OPUS_DEFAULT_SAMPLE_RATE / 1000)
-
-    QML_CONSTANT_PROPERTY(double, frameSizeMsMin, 2.5)
-    QML_CONSTANT_PROPERTY(double, frameSizeMsMax, 60)
-    QML_WRITABLE_PROPERTY(double, frameSizeMs, setFrameSizeMs, PJSUA_DEFAULT_AUDIO_FRAME_PTIME)
-
-    QML_CONSTANT_PROPERTY(int, lostConnTimeoutSecMin, 5)
-    QML_CONSTANT_PROPERTY(int, lostConnTimeoutSecMax, 60)
+    QML_WRITABLE_PROPERTY(bool, alwaysOnTop, setAlwaysOnTop, true)
     QML_WRITABLE_PROPERTY(int, lostConnTimeoutSec, setLostConnTimeoutSec, 15)
-
-    QML_WRITABLE_PROPERTY(bool, isVariableBitRate, setIsVariableBitRate,
-                          PJ_FALSE == PJMEDIA_CODEC_OPUS_DEFAULT_CBR)
 
 public:
     enum CodecBitRate { CODEC_OPUS_DEFAULT_BIT_RATE_KBPS = 0,

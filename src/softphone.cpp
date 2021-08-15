@@ -966,10 +966,10 @@ bool Softphone::setupAudioCodecParam()
         return false;
     }
 
-    cfg.sample_rate = _settings->sampRateKhz() * 1000;
-    cfg.frm_ptime = _settings->frameSizeMs();
-    cfg.bit_rate = _settings->bitrateKbps() * 1000;
-    cfg.cbr = !_settings->isVariableBitRate();
+    cfg.sample_rate = PJMEDIA_CODEC_OPUS_DEFAULT_SAMPLE_RATE;
+    cfg.frm_ptime = PJSUA_DEFAULT_AUDIO_FRAME_PTIME;
+    cfg.bit_rate = PJMEDIA_CODEC_OPUS_DEFAULT_BIT_RATE;
+    cfg.cbr = PJMEDIA_CODEC_OPUS_DEFAULT_CBR;
 
     auto *codecMgr = pjMediaCodecMgr();
     if (nullptr == codecMgr) {

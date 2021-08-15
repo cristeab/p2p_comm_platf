@@ -18,15 +18,10 @@
 #define MICROPHONE_VOLUME "MICROPHONE VOLUME"
 #define SPEAKERS_VOLUME "SPEAKERS VOLUME"
 #define DIALPAD_VOLUME "DIALPAD VOLUME"
-
-#define BITRATE "BITRATE"
-#define SAMPLING_RATE "SAMPLING RATE"
-#define FRAME_SIZE "FRAME SIZE"
+#define ALWAYS_ON_TOP "ALWAYS ON TOP"
 #define LOST_CONN_TIMEOUT "LOST CONN TIMEOUT"
-#define VARIABLE_BITRATE "VARIABLE BITRATE"
 
-#define SETTINGS_FOLDER ".airbytes"
-#define REC_FOLDER "AirbytesRecordings"
+#define SETTINGS_FOLDER ".p2pcomm"
 
 Settings *_instance = nullptr;
 
@@ -70,13 +65,8 @@ void Settings::clear()
 
     setMicrophoneVolume(1);
     setSpeakersVolume(1);
-    setDialpadSoundVolume(0.5);
-
-    setBitrateKbps(PJMEDIA_CODEC_OPUS_DEFAULT_BIT_RATE / 1000);
-    setSampRateKhz(PJMEDIA_CODEC_OPUS_DEFAULT_SAMPLE_RATE / 1000);
-    setFrameSizeMs(PJSUA_DEFAULT_AUDIO_FRAME_PTIME);
+    setAlwaysOnTop(true);
     setLostConnTimeoutSec(15);
-    setIsVariableBitRate(PJ_FALSE == PJMEDIA_CODEC_OPUS_DEFAULT_CBR);
 
     uninstallClear();
 }
@@ -104,13 +94,8 @@ void Settings::load()
 
     setMicrophoneVolume(settings.value(MICROPHONE_VOLUME, _microphoneVolume).toDouble());
     setSpeakersVolume(settings.value(SPEAKERS_VOLUME, _speakersVolume).toDouble());
-    setDialpadSoundVolume(settings.value(DIALPAD_VOLUME, _dialpadSoundVolume).toDouble());
-
-    setBitrateKbps(settings.value(BITRATE, _bitrateKbps).toInt());
-    setSampRateKhz(settings.value(SAMPLING_RATE, _sampRateKhz).toInt());
-    setFrameSizeMs(settings.value(FRAME_SIZE, _frameSizeMs).toDouble());
+    setAlwaysOnTop(settings.value(ALWAYS_ON_TOP, _alwaysOnTop).toBool());
     setLostConnTimeoutSec(settings.value(LOST_CONN_TIMEOUT, _lostConnTimeoutSec).toInt());
-    setIsVariableBitRate(settings.value(VARIABLE_BITRATE, _isVariableBitRate).toBool());
 }
 
 void Settings::save()
@@ -122,13 +107,8 @@ void Settings::save()
 
     settings.setValue(MICROPHONE_VOLUME, _microphoneVolume);
     settings.setValue(SPEAKERS_VOLUME, _speakersVolume);
-    settings.setValue(DIALPAD_VOLUME, _dialpadSoundVolume);
-
-    settings.setValue(BITRATE, _bitrateKbps);
-    settings.setValue(SAMPLING_RATE, _sampRateKhz);
-    settings.setValue(FRAME_SIZE, _frameSizeMs);
+    settings.setValue(ALWAYS_ON_TOP, _alwaysOnTop);
     settings.setValue(LOST_CONN_TIMEOUT, _lostConnTimeoutSec);
-    settings.setValue(VARIABLE_BITRATE, _isVariableBitRate);
 }
 
 AudioDevices::DeviceInfo Settings::inputAudioDeviceInfo()

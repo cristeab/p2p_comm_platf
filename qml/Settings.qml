@@ -28,93 +28,87 @@ Page {
         }
         horizontalAlignment: Text.AlignHCenter
         color: "white"
-        text: qsTr("Advanced Settings")
+        text: qsTr("Settings")
         font.pointSize: Theme.textFontSize
     }
 
-    Column {
-        id: settCol
+    Flickable {
         anchors {
             top: titleLbl.bottom
-            topMargin: 6 * Theme.windowMargin
+            topMargin: 2 * Theme.windowMargin
+            bottom: parent.bottom
+            bottomMargin: Theme.windowMargin / 2
             left: parent.left
-            leftMargin: 2 * Theme.windowMargin
+            leftMargin: Theme.windowMargin
             right: parent.right
-            rightMargin: 2 * Theme.windowMargin
+            rightMargin: Theme.windowMargin
         }
-        spacing: Theme.windowMargin
-        CustomSlider {
-            text: qsTr("Bitrate")
-            width: parent.width
-            unit: "kb/s"
-            stepSize: 1
-            from: Settings.CODEC_OPUS_DEFAULT_BIT_RATE_KBPS
-            to: Settings.CODEC_OPUS_MAX_BIT_RATE_KBPS
-            value: softphone.settings.bitrateKbps
-            onValueChanged: {
-                if ((Settings.CODEC_OPUS_DEFAULT_BIT_RATE_KBPS !== value) &&
-                        (value < Settings.CODEC_OPUS_MIN_BIT_RATE_KBPS)) {
-                    softphone.settings.bitrateKbps = Settings.CODEC_OPUS_MIN_BIT_RATE_KBPS
-                } else {
-                    softphone.settings.bitrateKbps = value
-                }
+        contentWidth: devicesLayout.width
+        contentHeight: devicesLayout.height
+        clip: true
+
+        ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+        ScrollBar.horizontal: ScrollBar { policy: ScrollBar.AsNeeded }
+        Column {
+            id: devicesLayout
+            spacing: 10
+            LabelComboBox {
+                id: callOutputSrc
+                text: qsTr("Speaker Source")
+                width: appWin.width - 2 * Theme.windowMargin
+                model: softphone.outputAudioDevices
+                currentIndex: softphone.settings.outputAudioModelIndex
+                onCurrentIndexChanged: softphone.settings.outputAudioModelIndex = currentIndex
             }
-        }
-        CustomSlider {
-            text: qsTr("Sampling Rate")
-            width: parent.width
-            unit: "kHz"
-            stepSize: 4
-            from: Settings.CODEC_OPUS_MIN_SAMPLE_RATE_KHZ
-            to: Settings.CODEC_OPUS_MAX_SAMPLE_RATE_KHZ
-            value: softphone.settings.sampRateKhz
-            onValueChanged: {
-                if ((Settings.CODEC_OPUS_SAMPLE_RATE_1_KHZ < value) &&
-                        (value < Settings.CODEC_OPUS_SAMPLE_RATE_2_KHZ)) {
-                    softphone.settings.sampRateKhz = Settings.CODEC_OPUS_SAMPLE_RATE_1_KHZ
-                } else if ((Settings.CODEC_OPUS_SAMPLE_RATE_2_KHZ <= value) &&
-                           (value <= (Settings.CODEC_OPUS_SAMPLE_RATE_2_KHZ + 12))) {
-                    softphone.settings.sampRateKhz = Settings.CODEC_OPUS_SAMPLE_RATE_2_KHZ
-                } else if ((Settings.CODEC_OPUS_SAMPLE_RATE_2_KHZ + 12) < value) {
-                    softphone.settings.sampRateKhz = Settings.CODEC_OPUS_MAX_SAMPLE_RATE_KHZ
-                } else {
-                    softphone.settings.sampRateKhz = value
-                }
+            LabelSlider {
+                text: qsTr("Speaker Volume")
+                width: callOutputSrc.width
+                from: 0
+                to: 5
+                stepSize: 0.1
+                value: softphone.settings.speakersVolume
+                onValueChanged: softphone.settings.speakersVolume = value
             }
-        }
-        CustomSlider {
-            text: qsTr("Frame Size")
-            width: parent.width
-            unit: "ms"
-            stepSize: 0.1
-            from: softphone.settings.frameSizeMsMin
-            to: softphone.settings.frameSizeMsMax
-            value: softphone.settings.frameSizeMs
-            decimalPlaces: 1
-            onValueChanged: softphone.settings.frameSizeMs = value
-        }
-        CustomSlider {
-            text: qsTr("Lost Connection Timeout")
-            width: parent.width
-            unit: "sec"
-            stepSize: 1
-            from: softphone.settings.lostConnTimeoutSecMin
-            to: softphone.settings.lostConnTimeoutSecMax
-            value: softphone.settings.lostConnTimeoutSec
-            onValueChanged: softphone.settings.lostConnTimeoutSec = value
-        }
-    }
-    CustomSwitch {
-        anchors {
-            top: settCol.bottom
-            topMargin: -2 * Theme.windowMargin
-            left: settCol.left
-            right: settCol.right
-        }
-        mainText: qsTr("Bit Rate")
-        leftText: qsTr("Constant")
-        rightText: qsTr("Variable")
-        checked: softphone.settings.isVariableBitRate
-        onCheckedChanged: softphone.settings.isVariableBitRate = checked
+            LabelProgressBar {
+                text: qsTr("Speaker Level")
+                width: callOutputSrc.width
+                from: 0
+                to: 255
+                value: softphone.rxLevel
+            }
+            LabelComboBox {
+                id: inputAudioDevs
+                text: qsTr("Microphone Source")
+                width: callOutputSrc.width
+                model: softphone.inputAudioDevices
+                currentIndex: softphone.settings.inputAudioModelIndex
+                onCurrentIndexChanged: softphone.settings.inputAudioModelIndex = inputAudioDevs.currentIndex
+            }
+            LabelSlider {
+                text: qsTr("Microphone Volume")
+                width: callOutputSrc.width
+                from: 0
+                to: 5
+                stepSize: 0.1
+                value: softphone.settings.microphoneVolume
+                onValueChanged: softphone.settings.microphoneVolume = value
+            }
+            LabelProgressBar {
+                text: qsTr("Microphone Level")
+                width: callOutputSrc.width
+                from: 0
+                to: 255
+                value: softphone.txLevel
+            }
+            CheckBox {
+                id: alwaysOnTopCheck
+                visible: !Theme.isMobile
+                indicator.height: 20
+                indicator.width: 20
+                checked: softphone.settings.alwaysOnTop
+                onCheckedChanged: softphone.settings.alwaysOnTop = checked
+                text: qsTr("Always on Top")
+            }
+        } // Column
     }
 }

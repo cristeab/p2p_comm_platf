@@ -18,6 +18,7 @@ QtObject {
     readonly property real buttonFontSize: 20
     readonly property real buttonTextFontSize: 16
     readonly property real textFontSize: 18
+    readonly property real labelFontSize: 12
 
     readonly property real windowMinimumWidth: 350
     readonly property real windowMinimumHeight: 590
