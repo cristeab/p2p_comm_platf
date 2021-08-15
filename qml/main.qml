@@ -67,7 +67,7 @@ ApplicationWindow {
 
     Connections {
         target: softphone
-        function onIncoming(callCount, callId, address, userName, isConf) {
+        function onIncoming(callCount, callId, userName, isConf) {
             if (1 > callCount) {
                 console.error("Unexpected call count " + callCount)
                 return
