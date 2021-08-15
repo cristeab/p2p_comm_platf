@@ -11,7 +11,7 @@ import Softphone 1.0
 ApplicationWindow {
     id: appWin
 
-    flags: Qt.MaximizeUsingFullscreenGeometryHint
+    flags: appWin.windowFlags()
     title: softphone.settings.appName + " v" + softphone.settings.appVersion
     width: appWin.minimumWidth
     height: appWin.minimumHeight
@@ -21,6 +21,18 @@ ApplicationWindow {
 
     signal closeIncomingCallDialog(int callId)
 
+    function windowFlags() {
+        if (Theme.isMobile) {
+            return Qt.MaximizeUsingFullscreenGeometryHint
+        }
+        if (!softphone.settings.alwaysOnTop) {
+            return Qt.Window
+        }
+        if (Theme.isMacOs) {
+            return Qt.WindowStaysOnTopHint
+        }
+        return Qt.Window
+    }
     function raiseWindow() {
         appWin.show()
         appWin.raise()

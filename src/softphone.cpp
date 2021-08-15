@@ -54,7 +54,7 @@ Softphone::Softphone() : _deviceUuid(generateDeviceUuid())
             setRxLevel(0);
         } else {
             setActiveCall(value);
-            //setDialedText(_activeCallModel->currentPhoneNumber());
+            value ? _currentUserTimer.start() : _currentUserTimer.stop();
         }
     });
     connect(_activeCallModel, &ActiveCallModel::unholdCall, this, [this](int callId) {
