@@ -170,7 +170,7 @@ void Softphone::onCalling(int callId, const QString &deviceUuid, const QString &
 void Softphone::onIncoming(int callCount, int callId, const ZeroConfItem &zcItem, bool isConf)
 {
     emit incomingMessageDialog(callCount, callId, zcItem.name, isConf);
-    qDebug() << "Call count" << callCount << ", CID" << callId;
+    qDebug() << "Call count" << callCount << ", CID" << callId << ", name" << zcItem.name;
     Q_UNUSED(callCount)
     Q_UNUSED(isConf)
     //open audio device only when needed (automatically closed when the call ends)
