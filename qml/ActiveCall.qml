@@ -5,6 +5,13 @@ import "custom"
 Page {
     background: Item {}
 
+    SettingsButton {
+        anchors {
+            top: parent.top
+            right: parent.right
+            rightMargin: Theme.windowMargin
+        }
+    }
     IntercomLabel {
         id: currentDevLbl
         anchors {
