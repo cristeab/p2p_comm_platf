@@ -45,7 +45,7 @@ Page {
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
             color: "white"
-            text: qsTr("Ensure both devices are on the same network and have this app.")
+            text: qsTr("Ensure other devices are on the same network and have this app.")
             font.pointSize: Theme.textFontSize
             wrapMode: Text.WordWrap
         }
