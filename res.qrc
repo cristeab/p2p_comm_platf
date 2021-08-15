@@ -37,5 +37,6 @@
         <file>qml/DeviceList.qml</file>
         <file>qml/Settings.qml</file>
         <file>qml/ActiveCall.qml</file>
+        <file>qml/custom/CustomCheckBox.qml</file>
     </qresource>
 </RCC>

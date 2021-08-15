@@ -42,6 +42,7 @@ Page {
             right: parent.right
             rightMargin: Theme.windowMargin
         }
+        boundsBehavior: Flickable.StopAtBounds
         contentWidth: devicesLayout.width
         contentHeight: devicesLayout.height
         clip: true
@@ -99,11 +100,9 @@ Page {
                 to: 255
                 value: softphone.txLevel
             }
-            CheckBox {
+            CustomCheckBox {
                 id: alwaysOnTopCheck
                 visible: !Theme.isMobile
-                indicator.height: 20
-                indicator.width: 20
                 checked: softphone.settings.alwaysOnTop
                 onCheckedChanged: softphone.settings.alwaysOnTop = checked
                 text: qsTr("Always on Top")
