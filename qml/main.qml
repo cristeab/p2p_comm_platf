@@ -94,7 +94,7 @@ ApplicationWindow {
         function onActiveCallChanged() {
             if (softphone.activeCall) {
                 callDurationTimer.durationSec = -1
-            } else if (3 === tabView.depth) {
+            } else if (2 === tabView.depth) {
                 tabView.pop()
             }
         }

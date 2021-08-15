@@ -87,7 +87,7 @@ Softphone::Softphone() : _deviceUuid(generateDeviceUuid())
 #else
         const auto &cids = _activeCallModel->confirmedCallsId();
         for (auto id: cids) {
-            muteSpeakers(!_muteSpeakers, id);
+            muteSpeakers(_muteSpeakers, id);
         }
 #endif
     });
