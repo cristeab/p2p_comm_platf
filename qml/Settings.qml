@@ -14,7 +14,6 @@ Page {
             left: parent.left
             leftMargin: Theme.windowMargin
         }
-        onBackAction: softphone.setupAudioCodecParam()
     }
     Label {
         id: titleLbl
