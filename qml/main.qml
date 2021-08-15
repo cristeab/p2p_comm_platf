@@ -120,6 +120,11 @@ ApplicationWindow {
             const title = error ? qsTr("Error") : qsTr("Information")
             msgDlgProps.showMessageDialog(title, message, false, retry, null, -1, null)
         }
+        function onTrayIconMessage(msg) {
+            if (null != trayIconLoader.item) {
+                trayIconLoader.item.showMessage(softphone.settings.appName, msg)
+            }
+        }
     }
 
     Component {

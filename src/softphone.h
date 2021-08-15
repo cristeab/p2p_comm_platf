@@ -101,6 +101,7 @@ signals:
     void phoneStateChanged();
     void audioDevicesChanged();
     void showMessageDialog(const QString &message, bool error, bool retry);
+    void trayIconMessage(const QString &msg);
 
 private:
     Q_DISABLE_COPY_MOVE(Softphone)
@@ -192,6 +193,7 @@ private:
     static QString deviceName();
     static QString generateDeviceUuid();
     void updateCurrentDeviceName(const QString &name, bool add);
+    void raiseWindow();
 
     QObject *_mainForm = nullptr;
     QTimer _currentUserTimer;

@@ -174,7 +174,10 @@ void Softphone::onCalling(int callId, const QString &deviceUuid, const QString &
 
 void Softphone::onIncoming(int callCount, int callId, const ZeroConfItem &zcItem, bool isConf)
 {
+    emit trayIconMessage(tr("Incoming call from ") + zcItem.name);
+
     emit incomingMessageDialog(callCount, callId, zcItem.name, isConf);
+
     qDebug() << "Call count" << callCount << ", CID" << callId << ", name" << zcItem.name;
     Q_UNUSED(callCount)
     Q_UNUSED(isConf)
@@ -182,6 +185,9 @@ void Softphone::onIncoming(int callCount, int callId, const ZeroConfItem &zcItem
     setAudioDevices();
     updateCurrentDeviceName(zcItem.name, true);
     _activeCallModel->addCall(callId, zcItem.uuid, zcItem.name);
+
+    raiseWindow();
+
     startPlayingRingTone(callId);
     updateServiceWithItem(zcItem);
 }
@@ -1355,6 +1361,7 @@ void Softphone::addService(QZeroConfService item)
             qDebug() << "Update existing service";
             _zeroConfList[i] = zeroConfItem;
             _deviceList[i] = name;
+            emit trayIconMessage(tr("Update service ") + name);
             found = true;
             break;
         }
@@ -1363,6 +1370,7 @@ void Softphone::addService(QZeroConfService item)
     if (!found) {
         _zeroConfList << zeroConfItem;
         _deviceList << name;
+        emit trayIconMessage(tr("New service ") + name);
     }
     emit deviceListChanged();
 }
@@ -1388,9 +1396,11 @@ void Softphone::removeServiceWithUuid(const QString &uuid)
     for (int i = 0; i < _zeroConfList.size(); ++i) {
         if (uuid == _zeroConfList.at(i).uuid) {
             _zeroConfList.removeAt(i);
+            const auto name = _deviceList.at(i);
             _deviceList.removeAt(i);
             emit deviceListChanged();
             qInfo() << "Service removed" << uuid;
+            emit trayIconMessage(tr("Removed service ") + name);
             return;
         }
     }
@@ -1503,4 +1513,17 @@ void Softphone::resetElapsedTimer()
 {
     _retryElapsedTimer.invalidate();
     _instance->setShowBusy(false);
+}
+
+void Softphone::raiseWindow()
+{
+    qDebug() << "Raise window";
+    if (nullptr != _mainForm) {
+        if (!QMetaObject::invokeMethod(_mainForm, "raiseWindow",
+                                       Qt::AutoConnection)) {
+            qCritical() << "Cannot call raiseWindow method";
+        }
+    } else {
+        qCritical() << "mainForm object is NULL";
+    }
 }
