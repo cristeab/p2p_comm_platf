@@ -70,6 +70,7 @@ Page {
                 onValueChanged: softphone.settings.speakersVolume = value
             }
             LabelProgressBar {
+                visible: softphone.activeCall
                 text: qsTr("Speaker Level")
                 width: callOutputSrc.width
                 from: 0
@@ -94,6 +95,7 @@ Page {
                 onValueChanged: softphone.settings.microphoneVolume = value
             }
             LabelProgressBar {
+                visible: softphone.activeCall
                 text: qsTr("Microphone Level")
                 width: callOutputSrc.width
                 from: 0
