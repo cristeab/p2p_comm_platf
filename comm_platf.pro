@@ -42,7 +42,7 @@ RESOURCES += res.qrc
 RESOURCE_CONTENT = "$${LITERAL_HASH}pragma once" \
                    "$${LITERAL_HASH}define APP_VERSION \"$${APP_VERSION}\"" \
                    "$${LITERAL_HASH}define ORG_NAME \"Bogdan Cristea\"" \
-                   "$${LITERAL_HASH}define APP_NAME \"P2P Communication Platform\""
+                   "$${LITERAL_HASH}define APP_NAME \"p2pComm\""
 
 GENERATED_RESOURCE_FILE = $$OUT_PWD/config.h
 write_file($$GENERATED_RESOURCE_FILE, RESOURCE_CONTENT) | error("Aborting.")
