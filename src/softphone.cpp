@@ -81,11 +81,16 @@ Softphone::Softphone() : _deviceUuid(generateDeviceUuid())
         }
     });
     //connection with enable speakers
+    connect(this, &Softphone::muteSpeakersChanged, this, [this]() {
 #if defined(Q_OS_IOS)
-    connect(this, &Softphone::enableSpeakerChanged, this, [this]() {
-        audioOutputSpeaker(_enableSpeaker);
-    });
+        audioOutputSpeaker(!_muteSpeakers);
+#else
+        const auto &cids = _activeCallModel->confirmedCallsId();
+        for (auto id: cids) {
+            muteSpeakers(!_muteSpeakers, id);
+        }
 #endif
+    });
     //connection with hold call
     connect(this, &Softphone::holdCallChanged, this, [this]() {
         const auto cid = _activeCallModel->currentCallId();
@@ -678,8 +683,22 @@ bool Softphone::muteMicrophone(bool value, int callId)
         qCritical() << "Cannot get conference slot for call ID" << callId;
         return false;
     }
-    qDebug() << "mute" << value << callId;
+    qDebug() << "muteMicrophone" << value << callId;
     return setMicrophoneVolume(confSlot, value);
+}
+
+bool Softphone::muteSpeakers(bool value, int callId)
+{
+    if (PJSUA_INVALID_ID == callId) {
+        callId = _activeCallModel->currentCallId();
+    }
+    const pjsua_conf_port_id confSlot = pjsua_call_get_conf_port(callId);
+    if (PJSUA_INVALID_ID == confSlot) {
+        qCritical() << "Cannot get conference slot for call ID" << callId;
+        return false;
+    }
+    qDebug() << "muteSpeakers" << value << callId;
+    return setSpeakersVolume(confSlot, value);
 }
 
 void Softphone::initAudioDevicesList()

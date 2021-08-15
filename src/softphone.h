@@ -24,7 +24,7 @@ class Softphone : public QObject {
     QML_WRITABLE_PROPERTY(bool, activeCall, setActiveCall, false)
 
     QML_WRITABLE_PROPERTY(bool, muteMicrophone, setMuteMicrophone, false)
-    QML_WRITABLE_PROPERTY(bool, enableSpeaker, setEnableSpeaker, false)
+    QML_WRITABLE_PROPERTY(bool, muteSpeakers, setMuteSpeakers, false)
 
     QML_WRITABLE_PROPERTY(int, winPosX, setWinPosX, 0)
     QML_WRITABLE_PROPERTY(int, winPosY, setWinPosY, 0)
@@ -81,6 +81,7 @@ public:
 
     bool hold(bool value, int callId);
     bool muteMicrophone(bool value, int callId);
+    bool muteSpeakers(bool value, int callId);
     QString convertNumber(const QString &num);
     void release();
 

@@ -38,10 +38,10 @@ Page {
             onClicked: softphone.muteMicrophone = !softphone.muteMicrophone
         }
         IconTextButton {
-            icon.source: softphone.enableSpeaker ? "qrc:/img/volume.svg" : "qrc:/img/volume-down.svg"
+            icon.source: softphone.muteSpeakers ? "qrc:/img/volume-down.svg" : "qrc:/img/volume.svg"
             text: qsTr("Audio")
-            toolTip: softphone.enableSpeaker ? qsTr("Disable Speaker") : qsTr("Enable Speaker")
-            onClicked: softphone.enableSpeaker = !softphone.enableSpeaker
+            toolTip: softphone.muteSpeakers ? qsTr("Enable Speaker") : qsTr("Disable Speaker")
+            onClicked: softphone.muteSpeakers = !softphone.muteSpeakers
         }
     }
 
