@@ -5,9 +5,19 @@ import "custom"
 Page {
     background: Item {}
 
-    Label {
+    IntercomLabel {
+        id: currentDevLbl
         anchors {
             top: parent.top
+            topMargin: 4 * Theme.windowMargin
+            horizontalCenter: parent.horizontalCenter
+        }
+        font.capitalization: Font.MixedCase
+        text: softphone.currentDeviceName
+    }
+    Label {
+        anchors {
+            top: currentDevLbl.bottom
             topMargin: 2 * Theme.windowMargin
             horizontalCenter: parent.horizontalCenter
         }
@@ -51,11 +61,8 @@ Page {
             text: qsTr("Hangup")
         }
         onClicked: {
-            if (softphone.activeCall) {
-                softphone.hangupAll()
-            } else if (3 === tabView.depth) {
-                tabView.pop()
-            }
+            softphone.hangupAll()
+            tabView.pop()
         }
     }
 }

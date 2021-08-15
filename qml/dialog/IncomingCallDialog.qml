@@ -69,7 +69,7 @@ Dialog {
             onClicked: {
                 if (control.actions[0]) {
                     control.actions[0](control.callId)
-                    if (2 === tabView.depth) {
+                    if (1 === tabView.depth) {
                         tabView.push("qrc:/qml/ActiveCall.qml")
                     }
                 }
