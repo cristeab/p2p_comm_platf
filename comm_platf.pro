@@ -136,6 +136,10 @@ macx {
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 11.0
     ICON = img/p2pcomm.icns
 
+    HEADERS += $$PWD/macos/src/dock_click_handler.h
+    SOURCES += $$PWD/macos/src/dock_click_handler.mm
+    INCLUDEPATH += $$PWD/macos/src
+
     DEFINES += PJ_AUTOCONF
     PJSIP_BUILD_FOLDER = build-macos
     INCLUDEPATH += $$PWD/../$${PJSIP_BUILD_FOLDER}/include

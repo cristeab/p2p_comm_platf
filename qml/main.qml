@@ -21,6 +21,24 @@ ApplicationWindow {
 
     signal closeIncomingCallDialog(int callId)
 
+    function raiseWindow() {
+        appWin.show()
+        appWin.raise()
+        appWin.requestActivate()
+    }
+    onClosing: {
+        if (null != trayIconLoader.item) {
+            trayIconLoader.item.showMessage(softphone.settings.appName,
+                                            qsTr("The program will keep running in the system tray. To terminate the program, choose 'Quit' in the context menu of the system tray entry."))
+        }
+        if (Theme.isMacOs) {
+            close.accepted = true
+        } else {
+            close.accepted = false
+            appWin.showMinimized()
+        }
+    }
+
     QtObject {
         id: msgDlgProps
         property int contactIndex: -1
@@ -102,6 +120,26 @@ ApplicationWindow {
             const title = error ? qsTr("Error") : qsTr("Information")
             msgDlgProps.showMessageDialog(title, message, false, retry, null, -1, null)
         }
+    }
+
+    Component {
+        id: trayIconComp
+        SystemTrayIcon {
+            Component.onCompleted: visible = true
+            icon.source: "qrc:/img/logo.png"
+            onActivated: appWin.raiseWindow()
+            menu: Menu {
+                MenuItem {
+                    text: qsTr("Quit")
+                    onTriggered: Qt.quit()
+                }
+            }
+        }
+    }
+    Loader {
+        id: trayIconLoader
+        active: !Theme.isMobile
+        sourceComponent: trayIconComp
     }
 
     //busy indicator

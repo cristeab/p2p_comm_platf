@@ -2,6 +2,7 @@
     <qresource prefix="/">
         <file>audio/DefaultRingTone.wav</file>
         <file>img/logo.svg</file>
+        <file>img/logo.png</file>
         <file>img/background.png</file>
         <file>img/settings.svg</file>
         <file>img/backarrow.svg</file>

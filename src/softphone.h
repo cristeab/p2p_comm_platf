@@ -65,6 +65,8 @@ public:
     Softphone();
     ~Softphone();
 
+    void setMainForm(QObject *mainForm) { _mainForm = mainForm; }
+
     static Softphone* instance();
 
     bool setAudioDevices();
@@ -88,6 +90,7 @@ public:
     static void showMessage(const QString &msg, bool error);
 
     static pj_bool_t onRxRequest(pjsip_rx_data *rdata);
+
 
 signals:
     void disconnected(int callId);
@@ -190,6 +193,7 @@ private:
     static QString generateDeviceUuid();
     void updateCurrentDeviceName(const QString &name, bool add);
 
+    QObject *_mainForm = nullptr;
     QTimer _currentUserTimer;
     static const QString _notAvailable;
     bool _pjsuaStarted = false;

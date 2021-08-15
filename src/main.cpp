@@ -1,6 +1,7 @@
 #include "softphone.h"
 #include "config.h"
 #include "settings.h"
+#include "dock_click_handler.h"
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -36,6 +37,17 @@ int main(int argc, char *argv[])
     }
 
     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
+    QList<QObject*> rootObjList = engine.rootObjects();
+    if (!rootObjList.isEmpty() && (nullptr != rootObjList.first())) {
+        QObject *rootObj = rootObjList.first();
+        softphone->setMainForm(rootObj);
+#if defined(Q_OS_MACOS)
+        setupDockClickHandler(rootObj);
+        QGuiApplication::setQuitOnLastWindowClosed(false);
+#elif defined (Q_OS_WIN)
+        setupTopMostWindow(rootObj);
+#endif
+    }
 
     auto *settings = softphone->settings();
     QObject::connect(&app, &QGuiApplication::aboutToQuit, settings, &Settings::save);
