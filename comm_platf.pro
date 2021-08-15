@@ -1,6 +1,6 @@
 TEMPLATE = app
 QT += core qml quick widgets svg gui multimedia
-TARGET = P2pCommPlatform
+TARGET = p2pComm
 APP_VERSION = 1.0.0
 
 CONFIG += c++17
@@ -134,6 +134,7 @@ ios {
 
 macx {
     QMAKE_MACOSX_DEPLOYMENT_TARGET = 11.0
+    ICON = img/p2pcomm.icns
 
     DEFINES += PJ_AUTOCONF
     PJSIP_BUILD_FOLDER = build-macos
@@ -174,4 +175,5 @@ OTHER_FILES +=  README.md \
                 tools/build-pjsip-ios.sh \
                 tools/build-pjsip-macos.sh \
                 tools/gen_ios_iconset.sh \
+                tools/gen_icns.sh \
                 ios/Entitlements.plist

@@ -1,7 +1,7 @@
 #!/bin/sh
 # NB: must be run from the source root folder
 
-ORIGICON=img/background.png
+ORIGICON=img/logo.png
 OUTDIR=ios/icons
 FILENAME=AppIcon
 
