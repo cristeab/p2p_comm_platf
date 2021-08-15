@@ -70,6 +70,10 @@ Note: open the script and verify that the paths point to the correct locations (
 
 # Screenshots
 
-![Start Screen](screenshots/start.png?raw=true "Start Screen")
-
 ![Service List](screenshots/service_list.png?raw=true "Service List")
+
+![Incoming Call](screenshots/incoming.png?raw=true "Incoming Call")
+
+![Active Call](screenshots/active_call.png?raw=true "Active Call")
+
+![Settings](screenshots/settings.png?raw=true "Settings")
