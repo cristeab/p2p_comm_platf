@@ -8,6 +8,7 @@ Page {
 
     BackButton {
         id: backBtn
+        toolTipText: qsTr("Back")
         anchors {
             top: parent.top
             topMargin: Theme.marginFactor * Theme.windowMargin

@@ -144,7 +144,7 @@ macx {
     PJSIP_BUILD_FOLDER = build-macos
     INCLUDEPATH += $$PWD/../$${PJSIP_BUILD_FOLDER}/include
 
-    PJSIP_LIB_SUFFIX = x86_64-apple-darwin20.5.0
+    PJSIP_LIB_SUFFIX = x86_64-apple-darwin21.2.0
     LIBS += -lpjsua2-$${PJSIP_LIB_SUFFIX} \
             -lpjsua-$${PJSIP_LIB_SUFFIX} \
             -lpjsip-ua-$${PJSIP_LIB_SUFFIX} \

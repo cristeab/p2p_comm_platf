@@ -11,6 +11,7 @@ Page {
             right: parent.right
             rightMargin: Theme.windowMargin
         }
+        toolTipText: qsTr("Settings")
     }   
     Logo {
         id: logoFrame

@@ -8,6 +8,7 @@ Button {
     property color color: "white"
     property int radius: 6
     property alias imageScale: contentImage.scale
+    property alias toolTipText: controlToolTip.text
 
     property bool isPressed: control.pressed || control.checked
 
@@ -25,5 +26,9 @@ Button {
         width: height
         mipmap: true
         scale: control.isPressed ? 0.9 : 1
+    }
+    ToolTip {
+        id: controlToolTip
+        visible: control.hovered
     }
 }
