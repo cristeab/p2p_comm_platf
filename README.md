@@ -3,20 +3,20 @@
 Peer to peer communication platform using Qt/QML and PJSIP library.
 Supported plaforms:
 
-- iOS
-
-- Android
-
 - macOS
 
-- Windows
+- Windows (planned)
 
-- Linux
+- Ubuntu (planned)
+
+- iOS (planned)
+
+- Android (planned)
 
 
 # Requirements
 
-- [Qt v5.15](https://www.qt.io)
+- [Qt v6.2](https://www.qt.io)
 
 - [PJSIP library v2.11](https://github.com/pjsip/pjproject/releases)
 

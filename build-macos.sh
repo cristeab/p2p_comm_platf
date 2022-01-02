@@ -2,8 +2,8 @@
 
 APP_NAME=p2pcomm
 
-QT_VER=5.15.2
-QT_ROOT=$HOME/Qt/$QT_VER/clang_64
+QT_VER=6.2.2
+QT_ROOT=$HOME/Qt/$QT_VER/macos
 
 rm -rf build
 mkdir -p build
