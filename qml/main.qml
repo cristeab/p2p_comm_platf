@@ -120,11 +120,7 @@ ApplicationWindow {
         }
         function onDisconnected(callId) {
             appWin.closeIncomingCallDialog(callId)
-        }
-        function onActiveCallChanged() {
-            if (softphone.activeCall) {
-                callDurationTimer.durationSec = -1
-            } else if (2 === tabView.depth) {
+            if (2 === tabView.depth) {
                 tabView.pop()
             }
         }

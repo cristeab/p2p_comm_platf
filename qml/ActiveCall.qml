@@ -4,6 +4,12 @@ import "custom"
 
 Page {
     background: Item {}
+    onVisibleChanged: {
+        if (visible) {
+            callDurationTimer.durationSec = -1
+            callDurationTimer.text = "00:00"
+        }
+    }
 
     SettingsButton {
         anchors {
@@ -37,17 +43,19 @@ Page {
 
     Row {
         anchors.centerIn: parent
-        spacing: 3 * Theme.windowMargin
+        spacing: 0
         IconTextButton {
             icon.source: softphone.muteMicrophone ? "qrc:/img/microphone-slash.svg" : "qrc:/img/microphone.svg"
-            text: softphone.muteMicrophone ? qsTr("Unmute") : qsTr("Mute")
-            toolTip: softphone.muteMicrophone ? qsTr("Enable Microphone") : qsTr("Disable Microphone")
+            text: qsTr("Microphone")
+            width: 1.5 * Theme.optionButtonHeight
+            toolTip: softphone.muteMicrophone ? qsTr("Enable") : qsTr("Disable")
             onClicked: softphone.muteMicrophone = !softphone.muteMicrophone
         }
         IconTextButton {
             icon.source: softphone.muteSpeakers ? "qrc:/img/volume-down.svg" : "qrc:/img/volume.svg"
-            text: qsTr("Audio")
-            toolTip: softphone.muteSpeakers ? qsTr("Enable Speaker") : qsTr("Disable Speaker")
+            text: qsTr("Speaker")
+            width: 1.5 * Theme.optionButtonHeight
+            toolTip: softphone.muteSpeakers ? qsTr("Enable") : qsTr("Disable")
             onClicked: softphone.muteSpeakers = !softphone.muteSpeakers
         }
     }

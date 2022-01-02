@@ -4,7 +4,7 @@ Timer {
     id: control
 
     property int durationSec: -1
-    property string text: ""
+    property string text: "00:00"
 
     function convertToString(v) {
         if (v < 10) {

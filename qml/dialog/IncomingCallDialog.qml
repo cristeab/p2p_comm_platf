@@ -63,6 +63,7 @@ Dialog {
         spacing: Theme.windowMargin
         CustomButton {
             id: leftBtn
+            height: Theme.busyHeight
             width: btnRow.btnWidth
             text: qsTr("Accept")
             backgroundColor: Theme.greenButtonColor
@@ -79,6 +80,7 @@ Dialog {
         }
         CustomButton {
             id: rightBtn
+            height: Theme.busyHeight
             width: btnRow.btnWidth
             text: qsTr("Decline")
             backgroundColor: Theme.errorColor
