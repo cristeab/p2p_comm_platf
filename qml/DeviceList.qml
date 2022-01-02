@@ -65,6 +65,7 @@ Page {
         snapMode: ListView.SnapToItem
         boundsBehavior: Flickable.StopAtBounds
         delegate: ItemDelegate {
+            id: itemDelegate
             text: modelData
             width: ListView.view.width
             contentItem: Text {
@@ -92,6 +93,10 @@ Page {
                 if (softphone.makeCall(index)) {
                     tabView.push("qrc:/qml/ActiveCall.qml")
                 }
+            }
+            ToolTip {
+                visible: itemDelegate.hovered
+                text: qsTr("Call ") + itemDelegate.text
             }
         }
         highlight: Rectangle {
