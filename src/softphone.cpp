@@ -171,26 +171,29 @@ void Softphone::onConfirmed(int callId)
 void Softphone::onCalling(int callId, const QString &deviceUuid, const QString &name)
 {
     _activeCallModel->addCall(callId, deviceUuid, name);
+    //open audio device only when needed (automatically closed when the call ends)
+    setAudioDevices();
+    startPlayingRingTone(callId);
 }
 
 void Softphone::onIncoming(int callCount, int callId, const ZeroConfItem &zcItem, bool isConf)
 {
-    emit trayIconMessage(tr("Incoming call from ") + zcItem.name);
-
-    emit incomingMessageDialog(callCount, callId, zcItem.name, isConf);
-
-    qDebug() << "Call count" << callCount << ", CID" << callId << ", name" << zcItem.name;
     Q_UNUSED(callCount)
     Q_UNUSED(isConf)
+    qDebug() << "Call count" << callCount << ", CID" << callId << ", name" << zcItem.name;
+
     //open audio device only when needed (automatically closed when the call ends)
     setAudioDevices();
+    startPlayingRingTone(callId);
+
+    emit trayIconMessage(tr("Incoming call from ") + zcItem.name);
+    emit incomingMessageDialog(callCount, callId, zcItem.name, isConf);
+
     updateCurrentDeviceName(zcItem.name, true);
     _activeCallModel->addCall(callId, zcItem.uuid, zcItem.name);
+    updateServiceWithItem(zcItem);
 
     raiseWindow();
-
-    startPlayingRingTone(callId);
-    updateServiceWithItem(zcItem);
 }
 
 void Softphone::onDisconnected(int callId)
