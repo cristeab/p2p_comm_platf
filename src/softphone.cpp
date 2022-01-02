@@ -1374,7 +1374,7 @@ void Softphone::addService(QZeroConfService item)
     if (!found) {
         _zeroConfList << zeroConfItem;
         _deviceList << name;
-        emit trayIconMessage(tr("New service ") + name);
+        emit trayIconMessage(tr("New device ") + name);
     }
     emit deviceListChanged();
 }
@@ -1404,7 +1404,7 @@ void Softphone::removeServiceWithUuid(const QString &uuid)
             _deviceList.removeAt(i);
             emit deviceListChanged();
             qInfo() << "Service removed" << uuid;
-            emit trayIconMessage(tr("Removed service ") + name);
+            emit trayIconMessage(tr("Removed device ") + name);
             return;
         }
     }

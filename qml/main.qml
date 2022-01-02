@@ -124,6 +124,12 @@ ApplicationWindow {
                 tabView.pop()
             }
         }
+        function onActiveCallChanged()  {
+            if (!softphone.activeCall) {
+                callDurationTimer.durationSec = -1
+                callDurationTimer.text = "00:00"
+            }
+        }
         function onShowMessageDialog(message, error, retry) {
             const title = error ? qsTr("Error") : qsTr("Information")
             msgDlgProps.showMessageDialog(title, message, false, retry, null, -1, null)

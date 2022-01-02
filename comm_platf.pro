@@ -1,6 +1,6 @@
 TEMPLATE = app
 QT += core qml quick widgets svg gui multimedia
-TARGET = p2pComm
+TARGET = p2pcommlite
 APP_VERSION = 1.0.0
 
 CONFIG += c++17
@@ -42,12 +42,13 @@ RESOURCES += res.qrc
 RESOURCE_CONTENT = "$${LITERAL_HASH}pragma once" \
                    "$${LITERAL_HASH}define APP_VERSION \"$${APP_VERSION}\"" \
                    "$${LITERAL_HASH}define ORG_NAME \"Bogdan Cristea\"" \
-                   "$${LITERAL_HASH}define APP_NAME \"p2pComm\""
+                   "$${LITERAL_HASH}define APP_NAME \"p2pCommLite\""
 
 GENERATED_RESOURCE_FILE = $$OUT_PWD/config.h
 write_file($$GENERATED_RESOURCE_FILE, RESOURCE_CONTENT) | error("Aborting.")
 
 mac {
+    QMAKE_TARGET_BUNDLE_PREFIX = com.cristeab
     HEADERS += $$PWD/3rdparty/QtZeroConf/bonjour_p.h
     SOURCES += $$PWD/3rdparty/QtZeroConf/bonjour.cpp
     LIBS += -framework CoreServices

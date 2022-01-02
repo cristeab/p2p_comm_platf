@@ -4,12 +4,6 @@ import "custom"
 
 Page {
     background: Item {}
-    onVisibleChanged: {
-        if (visible) {
-            callDurationTimer.durationSec = -1
-            callDurationTimer.text = "00:00"
-        }
-    }
 
     SettingsButton {
         anchors {
