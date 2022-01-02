@@ -166,7 +166,7 @@ macx {
             -L$$PWD/../$${PJSIP_BUILD_FOLDER}/lib \
             -framework AudioToolbox \
             -framework CoreAudio \
-            /usr/local/Cellar/gnutls/3.6.15/lib/libgnutls.30.dylib \
+            /usr/local/Cellar/gnutls/3.6.16_1/lib/libgnutls.30.dylib \
             /usr/local/lib/libopencore-amrnb.a \
             /usr/local/Cellar/opus/1.3.1/lib/libopus.0.dylib
 }

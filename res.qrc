@@ -11,7 +11,7 @@
         <file>img/microphone.svg</file>
         <file>img/volume.svg</file>
         <file>img/volume-down.svg</file>
-        <file>qml/qtquickcontrols2.conf</file>
+        <file>qtquickcontrols2.conf</file>
         <file>qml/main.qml</file>
         <file>qml/Theme.qml</file>
         <file>qml/qmldir</file>

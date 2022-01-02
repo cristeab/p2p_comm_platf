@@ -15,7 +15,6 @@
 int main(int argc, char *argv[])
 {
     //main application
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication app(argc, argv);
 
     QGuiApplication::setOrganizationName(ORG_NAME);
@@ -24,10 +23,10 @@ int main(int argc, char *argv[])
 
     qSetMessagePattern("%{appname} [%{threadid}] [%{type}] %{message} (%{file}:%{line})");
 
+    std::unique_ptr<Softphone> softphone(new Softphone());//must be created before the engine
     QQmlApplicationEngine engine;
     //set properties
     QQmlContext *context = engine.rootContext();//registered properties are available to all components
-    std::unique_ptr<Softphone> softphone(new Softphone());
     if (nullptr != context) {
         qDebug() << "*** Application started ***";
         context->setContextProperty(softphone->objectName(), softphone.get());

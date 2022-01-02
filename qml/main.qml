@@ -1,10 +1,10 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Window 2.12
-import QtMultimedia 5.12
-import QtQuick.Dialogs 1.2
-import QtQuick.Layouts 1.12
-import Qt.labs.platform 1.1
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Window
+import QtMultimedia
+import QtQuick.Dialogs
+import QtQuick.Layouts
+import Qt.labs.platform
 import "custom"
 import Softphone 1.0
 
@@ -38,7 +38,7 @@ ApplicationWindow {
         appWin.raise()
         appWin.requestActivate()
     }
-    onClosing: {
+    onClosing: (close)=> {
         if (null != trayIconLoader.item) {
             trayIconLoader.item.showMessage(softphone.settings.appName,
                                             qsTr("The program will keep running in the system tray. To terminate the program, choose 'Quit' in the context menu of the system tray entry."))

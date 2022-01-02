@@ -1,5 +1,5 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.12
+import QtQuick
+import QtQuick.Controls
 import "custom"
 
 Page {
@@ -101,7 +101,7 @@ Page {
         Rectangle {
             z: -1
             anchors.fill: parent
-            color: "white"
+            color: "#80FFFFFF"
             radius: Theme.dialogBackgroundRadius
         }
     }
