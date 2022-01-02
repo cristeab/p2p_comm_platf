@@ -58,5 +58,6 @@ Dialog {
         elide: Text.ElideRight
         clip: true
         font.pointSize: Theme.buttonTextFontSize
+        background: Item {}
     }
 }
