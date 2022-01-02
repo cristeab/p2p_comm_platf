@@ -16,5 +16,4 @@ Label {
         visible: controlLabelMouseArea.containsMouse
         text: controlLabel.text
     }
-    background: Item {}
 }

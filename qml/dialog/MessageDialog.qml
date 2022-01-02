@@ -26,12 +26,6 @@ Dialog {
     y: (appWin.height-height)/2
     z: 2
 
-    background: Rectangle {
-        color: Theme.backgroundColor
-        radius: Theme.dialogBackgroundRadius
-        border.color: Theme.dialogBorderColor
-    }
-
     onAccepted: {
         if (null !== control.acceptCallback) {
             control.acceptCallback(control.callbackArg)

@@ -32,11 +32,7 @@ Dialog {
     modal: true
     closePolicy: Popup.NoAutoClose
     standardButtons: Dialog.NoButton
-    background: Rectangle {
-        color: Theme.backgroundColor
-        radius: Theme.dialogBackgroundRadius
-        border.color: Theme.dialogBorderColor
-    }
+
     LabelToolTip {
         id: controlLabel
         anchors {
