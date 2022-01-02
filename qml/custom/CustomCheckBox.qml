@@ -14,7 +14,6 @@ CheckBox {
         text: control.text
         font: control.font
         opacity: enabled ? 1.0 : 0.3
-        color: "white"
         verticalAlignment: Text.AlignVCenter
         leftPadding: control.indicator.width + control.spacing
     }

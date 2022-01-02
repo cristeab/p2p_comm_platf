@@ -14,11 +14,9 @@ Button {
         width: control.iconHeight
         color: "white"
     }
-    palette.buttonText: "white"
     ToolTip {
         id: controlToolTip
         visible: control.hovered && ("" !== controlToolTip.text)
     }
-    font.pointSize: Theme.buttonFontSize
     background: Item {}
 }

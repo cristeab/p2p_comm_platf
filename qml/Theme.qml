@@ -29,7 +29,7 @@ QtObject {
 
     readonly property real logoHeight: 50
     readonly property real busyHeight: 40
-    readonly property real buttonHeight: 40
+    readonly property real buttonHeight: 25
     readonly property real dialpadButtonHeight: 75
     readonly property real answerButtonHeight: 0.9 * dialpadButtonHeight
     readonly property real optionButtonHeight: dialpadButtonHeight

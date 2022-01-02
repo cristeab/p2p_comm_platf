@@ -12,6 +12,16 @@ Button {
 
     property bool isPressed: control.pressed || control.checked
 
+    leftPadding: 0
+    rightPadding: 0
+    topPadding: 0
+    bottomPadding: 0
+
+    leftInset: 0
+    rightInset: 0
+    topInset: 0
+    bottomInset: 0
+
     background: Rectangle {
         color: control.isPressed ? Qt.darker(control.color) : control.color
         height: control.height
@@ -25,10 +35,9 @@ Button {
         height: 0.5*parent.height
         width: height
         mipmap: true
-        scale: control.isPressed ? 0.9 : 1
     }
     ToolTip {
         id: controlToolTip
-        visible: control.hovered
+        visible: control.hovered && ("" !== control.toolTipText)
     }
 }

@@ -27,7 +27,6 @@ Page {
             rightMargin: Theme.windowMargin
         }
         horizontalAlignment: Text.AlignHCenter
-        color: "white"
         text: qsTr("Settings")
         font.pointSize: Theme.textFontSize
     }

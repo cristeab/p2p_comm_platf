@@ -8,6 +8,7 @@ Page {
     SettingsButton {
         anchors {
             top: parent.top
+            topMargin: Theme.windowMargin
             right: parent.right
             rightMargin: Theme.windowMargin
         }
@@ -30,7 +31,6 @@ Page {
         }
         width: parent.width
         horizontalAlignment: Text.AlignHCenter
-        color: "white"
         text: callDurationTimer.text
         font.pointSize: Theme.textFontSize
     }
@@ -62,6 +62,7 @@ Page {
         height: Theme.answerButtonHeight
         width: height
         source: "qrc:/img/hangup.svg"
+        imageScale: 0.8
         color: Theme.activeCallButtonColor
         ToolTip {
             visible: callBtn.hovered

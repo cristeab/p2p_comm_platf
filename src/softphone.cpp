@@ -158,6 +158,7 @@ Softphone* Softphone::instance()
 
 void Softphone::onConfirmed(int callId)
 {
+    setActiveCall(true);
     stopPlayingRingTone(callId);
 
     _activeCallModel->setCallState(callId, ActiveCallModel::CallState::CONFIRMED);
@@ -577,7 +578,7 @@ bool Softphone::makeCall(int zeroConfIndex)
         return false;
     }
 
-    setActiveCall(true);
+    setActiveCall(false);
     setCurrentDeviceName(_deviceList.at(zeroConfIndex));
     if (nullptr != _activeCallModel) {
         _activeCallModel->addCall(callId, _zeroConfList.at(zeroConfIndex).uuid,

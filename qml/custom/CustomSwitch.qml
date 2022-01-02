@@ -18,7 +18,6 @@ Item {
             left: parent.left
         }
         width: parent.width
-        color: "white"
         font.pointSize: Theme.textFontSize
     }
     Label {
@@ -27,7 +26,6 @@ Item {
             verticalCenter: controlSwitch.verticalCenter
             left: parent.left
         }
-        color: "white"
         font.pointSize: Theme.buttonTextFontSize
     }
     Switch {
@@ -48,7 +46,6 @@ Item {
             x: controlSwitch.leftPadding
             y: parent.height / 2 - height / 2
             radius: controlSwitch.indicatorHeight / 2
-            color: "white"
             border.color: "white"
 
             Rectangle {
@@ -69,7 +66,6 @@ Item {
             left: controlSwitch.right
             leftMargin: 2 * Theme.windowMargin
         }
-        color: "white"
         font.pointSize: Theme.buttonTextFontSize
     }
 }

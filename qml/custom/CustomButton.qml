@@ -12,7 +12,6 @@ Button {
         id: controlLabel
         anchors.centerIn: parent
         text: control.text
-        color: "white"
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         font: control.font

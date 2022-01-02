@@ -5,8 +5,8 @@ import ".."
 Button {
     id: control
 
-    property color textColor: "white"
-    property color backgroundColor: "black"
+    property color textColor: Theme.callHeaderTextColor
+    property color backgroundColor: Theme.backgroundColor
 
     display: AbstractButton.TextOnly
     font.pointSize: Theme.buttonFontSize

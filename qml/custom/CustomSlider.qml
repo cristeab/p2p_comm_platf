@@ -26,7 +26,6 @@ Item {
             bottomMargin: Theme.windowMargin / 2
             left: parent.left
         }
-        color: "white"
         font.pointSize: Theme.textFontSize
         text: control.text
     }
@@ -35,7 +34,6 @@ Item {
             left: textLbl.right
             verticalCenter: textLbl.verticalCenter
         }
-        color: "white"
         font.pointSize: Theme.buttonTextFontSize
         text: " - " + control.value.toFixed(control.decimalPlaces) + " " + control.unit
     }
@@ -54,7 +52,6 @@ Item {
                 }
                 height: parent.height
                 width: control.lineWidth
-                color: "white"
             }
             Rectangle {
                 anchors {
@@ -63,7 +60,6 @@ Item {
                 }
                 width: parent.width
                 height: control.lineWidth
-                color: "white"
             }
             Rectangle {
                 anchors {
@@ -72,7 +68,6 @@ Item {
                 }
                 height: parent.height
                 width: control.lineWidth
-                color: "white"
             }
         }
 
@@ -93,7 +88,6 @@ Item {
             topMargin: Theme.windowMargin / 2
             left: parent.left
         }
-        color: "white"
         font.pointSize: Theme.buttonTextFontSize
         text: control.from + " " + control.unit
     }
@@ -103,7 +97,6 @@ Item {
             topMargin: Theme.windowMargin / 2
             right: parent.right
         }
-        color: "white"
         font.pointSize: Theme.buttonTextFontSize
         text: control.to + " " + control.unit
     }

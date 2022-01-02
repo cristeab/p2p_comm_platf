@@ -8,6 +8,7 @@ Page {
     SettingsButton {
         anchors {
             top: parent.top
+            topMargin: Theme.windowMargin
             right: parent.right
             rightMargin: Theme.windowMargin
         }
@@ -37,7 +38,6 @@ Page {
         Label {
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
-            color: "white"
             text: qsTr("Looking for other devices.")
             font.pointSize: Theme.textFontSize
             wrapMode: Text.WordWrap
@@ -45,7 +45,6 @@ Page {
         Label {
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
-            color: "white"
             text: qsTr("Ensure other devices are on the same network and have this app.")
             font.pointSize: Theme.textFontSize
             wrapMode: Text.WordWrap

@@ -12,7 +12,6 @@ Column {
         id: controlLabel
         width: parent.width
         elide: Text.ElideRight
-        color: "white"
         font {
             italic: true
             pointSize: Theme.labelFontSize
