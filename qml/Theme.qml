@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Controls.Material
 
 pragma Singleton
 
@@ -36,23 +37,23 @@ QtObject {
     readonly property real buttonBackgroundRadius: 3
     readonly property real dialogBackgroundRadius: 5
 
-    readonly property color backgroundColor: "white"
-    readonly property color dialogBorderColor: "black"
-    readonly property color tabButtonColor: "#7a756b"
-    readonly property color sepColor: "darkgray"
-    readonly property color tabButtonColorSel: "black"
-    readonly property color dialButtonBackgroundColor: "#e2e2e2"
-    readonly property color dialButtonTextColor: "black"
-    readonly property color callHeaderTextColor: "white"
-    readonly property color callButtonColor: "#1ddd13"
-    readonly property color activeCallButtonColor: "#ea0014"
-    readonly property color confCallButtonColor: "#eb7414"
-    readonly property color blueButtonColor: "#4fa1dc"
-    readonly property color greenButtonColor: "green"
-    readonly property color errorColor: "red"
-    readonly property color helpTextColor: "#173683"
-    readonly property color startCallButtonColor: "#FF9300"
+    readonly property color backgroundColor: Material.background
+    readonly property color dialogBorderColor: Material.color(Material.Brown)
+    readonly property color tabButtonColor: Material.color(Material.Brown)
+    readonly property color sepColor: Material.color(Material.BlueGrey)
+    readonly property color tabButtonColorSel: Material.background
+    readonly property color dialButtonBackgroundColor: Material.color(Material.Grey)
+    readonly property color dialButtonTextColor: Material.background
+    readonly property color callHeaderTextColor: Material.foreground
+    readonly property color callButtonColor: Material.color(Material.Green)
+    readonly property color activeCallButtonColor: Material.color(Material.Red)
+    readonly property color confCallButtonColor: Material.color(Material.Orange)
+    readonly property color blueButtonColor: Material.color(Material.Blue)
+    readonly property color greenButtonColor: Material.color(Material.Green)
+    readonly property color errorColor: Material.color(Material.Red)
+    readonly property color helpTextColor: Material.color(Material.Indigo)
+    readonly property color startCallButtonColor: Material.color(Material.Purple)
 
-    readonly property color incomingColor: "#86ef8a"
-    readonly property color outgoingColor: "#d3d3d3"
+    readonly property color incomingColor: Material.color(Material.LightGreen)
+    readonly property color outgoingColor: Material.color(Material.BlueGrey)
 }
