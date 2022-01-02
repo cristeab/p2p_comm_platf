@@ -40,7 +40,7 @@ QtObject {
     readonly property color backgroundColor: Material.background
     readonly property color dialogBorderColor: Material.color(Material.Brown)
     readonly property color tabButtonColor: Material.color(Material.Brown)
-    readonly property color sepColor: Material.color(Material.BlueGrey)
+    readonly property color sepColor: Material.color(Material.Grey)
     readonly property color tabButtonColorSel: Material.background
     readonly property color dialButtonBackgroundColor: Material.color(Material.Grey)
     readonly property color dialButtonTextColor: Material.background

@@ -68,12 +68,11 @@ Page {
             id: itemDelegate
             text: modelData
             width: ListView.view.width
-            contentItem: Text {
+            contentItem: Label {
                 text: parent.text
                 width: parent.width
                 font.pointSize: Theme.textFontSize
                 elide: Text.ElideRight
-                color:  "black"
                 leftPadding: Theme.windowMargin
                 rightPadding: Theme.windowMargin
                 verticalAlignment: Text.AlignVCenter
@@ -98,10 +97,6 @@ Page {
                 visible: itemDelegate.hovered
                 text: qsTr("Call ") + itemDelegate.text
             }
-        }
-        highlight: Rectangle {
-            color: "lightsteelblue"
-            radius: Theme.dialogBackgroundRadius
         }
         Rectangle {
             z: -1
